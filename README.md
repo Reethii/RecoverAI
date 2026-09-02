@@ -1,425 +1,605 @@
 # RecoverAI
 
-### AI-Powered Revenue Recovery Agent
+## AI-Powered Revenue Recovery Agent
 
-RecoverAI is an AI-powered revenue recovery system designed to detect failed payments, assess recovery risk, recommend the safest intervention, and execute bounded recovery actions.
+RecoverAI is an AI-powered revenue recovery system built for **Razorpay Buildathon — Track 03: AI Revenue Recovery**.
 
-Built for the **Razorpay AI Buildathon — Track 03: AI Revenue Recovery**.
+It detects failed payments, analyzes the reason for payment failure using **Google Gemini**, determines the safest recovery action, and executes a bounded recovery workflow using **Razorpay Test Mode**.
 
----
+> **Buildathon Track:** Track 03 — AI Revenue Recovery
 
-## 🚀 The Problem
+## Problem Statement
 
-Payment failures directly impact business revenue.
+Failed payments create significant revenue leakage for businesses.
 
-When a payment fails, businesses often need to determine:
+A payment can fail because of reasons such as:
 
-- Why did the payment fail?
-- Is the payment worth recovering?
-- Should the payment be retried?
-- Should the customer receive a new payment link?
-- Does the customer need to update their payment method?
-- When should the system stop taking action?
+- Insufficient balance
+- Temporary payment failures
+- Invalid or expired payment methods
+- Customers abandoning the payment process
+- Customers needing to use an alternative payment method
 
-RecoverAI turns this process into an AI-assisted revenue recovery workflow.
+Traditional payment systems often stop at simply reporting the failure.
 
----
+RecoverAI goes one step further by asking:
 
-## 💡 What RecoverAI Does
+> **Why did the payment fail, what should happen next, and can the revenue be recovered safely?**
 
-RecoverAI follows a simple recovery loop:
+The system uses AI to analyze payment context and recommend an appropriate recovery action while following predefined safety boundaries and stopping rules.
+
+## What RecoverAI Does
+
+RecoverAI provides an end-to-end AI-driven workflow for recovering revenue from failed payments.
+
+### Core Workflow
+
+1. **Detect** — Identifies failed or at-risk payments.
+2. **Analyze** — Uses Google Gemini to understand the payment failure and customer context.
+3. **Decide** — Selects an appropriate recovery action based on the available payment information.
+4. **Execute** — Performs a bounded recovery action through the backend.
+5. **Track** — Records the recovery attempt and outcome in the audit trail.
+6. **Stop** — Stops further automated action when recovery succeeds or customer intervention is required.
+
+### Supported Recovery Actions
+
+- **Retry Payment**
+- **Send Razorpay Payment Link**
+- **Request New Payment Method**
+- **No Action**
+
+This creates a complete loop from **payment failure → AI decision → recovery action → outcome tracking**.
+
+## Key Features
+
+### 🤖 AI Payment Analysis
+
+RecoverAI uses **Google Gemini** to analyze failed payments and determine:
+
+- Payment risk level
+- Recommended recovery action
+- Reason behind the recommendation
+- AI confidence score
+
+The AI decision is based on the available payment, customer, and payment-history information.
+
+### 💳 Razorpay Payment Link Recovery
+
+When a payment link is the appropriate recovery action, RecoverAI creates a **Razorpay Test Mode Payment Link** that the customer can use to complete the payment securely.
+
+### 🔄 Bounded Recovery Actions
+
+RecoverAI supports controlled recovery actions instead of unlimited automated retries:
+
+- Retry Payment
+- Send Payment Link
+- Request New Payment Method
+- No Action
+
+### 🔔 Razorpay Webhook Integration
+
+RecoverAI receives Razorpay webhook events to detect when a recovery payment has been successfully completed.
+
+This allows the system to update the payment status and recovery outcome automatically.
+
+### 📊 Revenue Recovery Analytics
+
+The dashboard provides visibility into:
+
+- Payments monitored
+- Revenue at risk
+- Recovered revenue
+- Recovery rate
+- Recovery outcomes
+- Recovery actions
+
+### 📝 Audit Trail
+
+Every recovery action is recorded with information such as:
+
+- Payment ID
+- Customer ID
+- Amount
+- Risk level
+- AI-recommended action
+- Recovery result
+- Reason for the action
+
+This makes the recovery workflow traceable and transparent.
+
+## AI Safety & Boundaries
+
+RecoverAI is designed with controlled and bounded AI decision-making.
+
+The AI does not have unrestricted access to payment operations. Instead, Gemini selects from a predefined set of recovery actions supported by the application.
+
+### Safety Rules
+
+- AI recommendations are limited to predefined recovery actions.
+- The system does not initiate refunds.
+- The system does not move money directly.
+- Unlimited payment retries are not allowed.
+- Successful payments are not retried or acted upon again.
+- Customer-action-required cases are not repeatedly automated.
+- Recovery actions and outcomes are recorded in the audit trail.
+- Razorpay Test Mode is used during development and demonstration.
+
+### Stopping Rules
+
+The recovery workflow stops when:
+
+- The payment is successfully recovered.
+- A customer needs to take further action.
+- The AI recommends **NO ACTION**.
+- The payment has already been recovered.
+
+These boundaries ensure that automation remains controlled, traceable, and aligned with the recovery workflow.
+
+## System Architecture
+
+RecoverAI follows a simple full-stack architecture connecting the frontend, backend, AI layer, database, and Razorpay.
 
 ```text
-Failed Payment
-      ↓
-Analyze Payment + Customer History
-      ↓
-AI Risk Assessment
-      ↓
-Recovery Recommendation
-      ↓
-Execute Bounded Recovery Action
-      ↓
-Track Outcome
-      ↓
-Update Recovery Analytics
-
-The AI analyzes the failed payment together with the customer's previous payment history and selects one of four allowed actions:
-
-RETRY PAYMENT
-SEND PAYMENT LINK
-REQUEST NEW PAYMENT METHOD
-NO ACTION
-
-The AI is explicitly constrained to avoid refunds, moving money, and unlimited retries.
-
-✨ Key Features
-🤖 AI Payment Analysis
-
-Gemini analyzes:
-
-Payment amount
-Payment status
-Failure reason
-Customer information
-Previous payment history
-
-It returns:
-
-Risk level
-Recommended recovery action
-Reason for the recommendation
-AI confidence score
-💳 Razorpay Payment Link Recovery
-
-When the AI recommends a payment link, RecoverAI creates a Razorpay Test Mode Payment Link for the failed payment.
-
-The generated link is displayed directly in the dashboard so the customer can complete the payment securely.
-
-🔄 Bounded Recovery Actions
-
-RecoverAI supports controlled recovery actions:
-
-AI Recommendation	Recovery Action
-RETRY PAYMENT	Retry recovery flow
-SEND PAYMENT LINK	Create Razorpay Payment Link
-REQUEST NEW PAYMENT METHOD	Ask customer to update payment method
-NO ACTION	Stop recovery
-
-The system does not perform unlimited retries or unauthorized financial operations.
-
-🔔 Razorpay Webhook Integration
-
-RecoverAI listens for the Razorpay:
-
-payment_link.paid
-
-event.
-
-When the customer successfully completes a recovery payment:
-
-Razorpay Payment Link
-        ↓
-Webhook
-        ↓
-Verify Signature
-        ↓
-Identify RecoverAI Payment
-        ↓
-Mark Payment SUCCESS
-        ↓
-Mark Recovery RECOVERED
-        ↓
-Update Analytics
-📊 Recovery Analytics
-
-The dashboard tracks revenue recovery performance, including:
-
-Payments monitored
-Revenue at risk
-Recovered revenue
-Recovery rate
-Recovery outcomes
-Recovery actions
-
-This allows businesses to see how much revenue was recovered through the AI workflow.
-
-🧾 Audit Trail
-
-Each recovery action is recorded with information such as:
-
-Payment ID
-Customer ID
-Amount
-Risk
-AI-selected action
-Recovery result
-Recovery reason
-
-This creates an auditable record of the agent's decisions.
-
-🧠 AI Safety Boundaries
-
-RecoverAI uses bounded AI decisions rather than allowing the model to perform unrestricted financial operations.
-
-The AI is instructed to:
-
-Use only the provided payment and customer information
-Consider previous payment history
-Avoid inventing customer information
-Never authorize refunds
-Never capture or move money
-Never recommend unlimited retries
-Choose only from predefined recovery actions
-
-This keeps the AI focused on revenue recovery while maintaining controlled execution.
-
-🏗️ Architecture
-                    ┌─────────────────────┐
-                    │     RecoverAI UI    │
-                    │    React + Vite     │
-                    └──────────┬──────────┘
+                    ┌──────────────────────┐
+                    │     React Frontend   │
+                    │      Dashboard       │
+                    └──────────┬───────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │    FastAPI Backend  │
-                    │       Python        │
-                    └──────┬───────┬──────┘
-                           │       │
-                 ┌─────────┘       └─────────┐
-                 ▼                           ▼
-        ┌─────────────────┐         ┌─────────────────┐
-        │   Gemini AI     │         │    Database     │
-        │ Payment Analysis│         │ SQLAlchemy/DB   │
-        └─────────────────┘         └─────────────────┘
-                 │
-                 ▼
-        ┌─────────────────┐
-        │ Razorpay Test   │
-        │      Mode       │
-        │ Payment Links   │
-        └────────┬────────┘
-                 │
-                 ▼
-        ┌─────────────────┐
-        │ Razorpay        │
-        │ Webhooks        │
-        └────────┬────────┘
-                 │
-                 ▼
-        Recovery Status + Audit Log
-🛠️ Tech Stack
-Frontend
-React
-Vite
-JavaScript
-CSS
-Backend
-Python
-FastAPI
-SQLAlchemy
-Pydantic
-Requests
-AI
-Google Gemini API
-Gemini structured JSON output
-Payments
-Razorpay Test Mode
-Razorpay Payment Links
-Razorpay Webhooks
-Development
-VS Code
-Postman
-Git
-GitHub
-📁 Project Structure
+                    ┌──────────────────────┐
+                    │    FastAPI Backend    │
+                    │  Recovery Orchestrator│
+                    └───────┬───────┬──────┘
+                            │       │
+                 ┌──────────┘       └──────────┐
+                 ▼                             ▼
+        ┌─────────────────┐           ┌─────────────────┐
+        │  Google Gemini  │           │    Database     │
+        │   AI Analysis   │           │ Customers /     │
+        │                 │           │ Payments / Logs │
+        └─────────────────┘           └─────────────────┘
+                            │
+                            ▼
+                  ┌────────────────────┐
+                  │      Razorpay      │
+                  │ Test Mode APIs &   │
+                  │ Payment Links      │
+                  └─────────┬──────────┘
+                            │
+                            ▼
+                  ┌────────────────────┐
+                  │ Razorpay Webhooks  │
+                  │  payment_link.paid │
+                  └────────────────────┘
+## Recovery
+
+Failed Payment
+      ↓
+Payment & Customer Context
+      ↓
+Gemini AI Analysis
+      ↓
+Risk + Recommended Action
+      ↓
+Bounded Recovery Action
+      ↓
+Razorpay / Customer Action
+      ↓
+Webhook Confirmation
+      ↓
+Database & Audit Trail Update
+      ↓
+Recovery Analytics
+
+### Important
+
+This section gives your README a **visual architecture diagram** instead of a wall of text, which makes the project much easier for a judge or recruiter to understand quickly.
+
+Your README now has:
+
+```text
+1. RecoverAI / Introduction
+2. Problem Statement
+3. What RecoverAI Does
+4. Key Features
+5. AI Safety & Boundaries
+6. System Architecture
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite |
+| Backend | Python + FastAPI |
+| Database | SQLite / SQLAlchemy |
+| AI | Google Gemini |
+| Payments | Razorpay Test Mode |
+| Payment Recovery | Razorpay Payment Links API |
+| Events | Razorpay Webhooks |
+| API Testing | Postman |
+| Development | VS Code |
+| Version Control | Git + GitHub |
+
+### AI Model
+
+RecoverAI uses **Google Gemini** for structured payment-risk analysis.
+
+The AI returns:
+
+- Risk level
+- Recovery recommendation
+- Reason
+- Confidence score
+
+The backend validates the AI response before using it in the recovery workflow.
+
+## Project Structure
+
+```text
 RecoverAI/
 │
 ├── backend/
-│   ├── main.py
-│   ├── main_backup.py
-│   ├── models.py
-│   ├── database.py
-│   └── .gitignore
+│   ├── main.py              # FastAPI application and recovery logic
+│   ├── models.py            # Database models
+│   ├── database.py          # Database configuration
+│   ├── .env                 # Local secrets (not committed)
+│   └── venv/                # Python virtual environment (not committed)
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── App.jsx          # Main React application
+│   │   ├── App.css          # Application styling
+│   │   └── assets/          # Frontend assets
+│   ├── public/              # Public assets
+│   ├── package.json         # Frontend dependencies
+│   └── vite.config.js       # Vite configuration
 │
-├── .gitignore
-└── README.md
-⚙️ Local Setup
-1. Clone the repository
+├── .gitignore               # Git ignore rules
+├── README.md                # Project documentation
+└── GIT_SETUP.md             # Git/GitHub setup notes
+
+Main Components
+
+Backend:
+Handles API requests and recovery workflows.
+Connects to the database.
+Communicates with Gemini.
+Integrates with Razorpay APIs.
+Processes Razorpay webhook events.
+
+Frontend:
+Displays payment and customer information.
+Shows AI risk analysis.
+Provides recovery actions.
+Displays recovery analytics and audit information.
+
+## Getting Started
+
+Follow the steps below to run RecoverAI locally.
+
+### Prerequisites
+
+Make sure the following are installed:
+
+- Python 3.10+
+- Node.js and npm
+- Git
+- Razorpay Test Mode account
+- Google Gemini API key
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/Reethii/RecoverAI.git
 cd RecoverAI
-🔧 Backend Setup
 
-Open a terminal:
+2. Backend Setup
+
+Open a terminal in the project root and run:
 
 cd backend
-
-Create and activate a virtual environment:
-
-Windows
 python -m venv venv
+
+Activate the virtual environment.
+
+Windows PowerShell:
+
 venv\Scripts\activate
 
-Install dependencies:
+Install the required Python packages:
 
-pip install fastapi uvicorn sqlalchemy pydantic requests python-dotenv google-genai
+pip install -r requirements.txt
 
-Create:
-
-backend/.env
-
-Add your credentials:
+Create a .env file inside the backend folder:
 
 GEMINI_API_KEY=your_gemini_api_key
-
 RAZORPAY_KEY_ID=your_razorpay_test_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
-
 RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 
-Never commit .env or expose API keys publicly.
-
-Start the backend:
+Start the FastAPI backend:
 
 uvicorn main:app --reload
 
-Backend:
+The backend will run at:
 
 http://localhost:8000
+3. Frontend Setup
 
-API health check:
-
-http://localhost:8000/health
-🎨 Frontend Setup
-
-Open another terminal:
+Open a second terminal:
 
 cd frontend
-
-Install dependencies:
-
 npm install
-
-Start the frontend:
-
 npm run dev
 
-Frontend:
+The React application will be available at the local URL shown by Vite.
 
-http://localhost:5173
-🔄 Example Recovery Flow
+4. Razorpay Webhook
 
-Suppose a customer has a failed payment:
+For local webhook testing, expose the FastAPI server through a public HTTPS tunnel and configure the following endpoint in Razorpay Test Mode:
 
+/webhooks/razorpay
+
+The webhook is used to receive payment-link payment events and update the recovery status.
+
+
+### ⚠️ One important check before you paste
+
+This section assumes your backend has a `requirements.txt` file.
+
+From the repository files we previously committed, I **don't have evidence that `backend/requirements.txt` currently exists**. So **don't paste the `pip install -r requirements.txt` line yet** if you're unsure.
+
+If you don't have `requirements.txt`, we'll make this section accurate rather than documenting a command that won't work.
+
+For now, paste everything **up to the Backend Setup section**, and we'll verify the dependency part together.
+
+Say **done** when you've added it. Then we'll do **Section 10 — Example Recovery Flow**.
+
+## Example Recovery Flow
+
+A typical RecoverAI recovery flow works as follows:
+
+```text
+1. Payment fails
+       ↓
+2. RecoverAI retrieves payment and customer context
+       ↓
+3. Gemini analyzes the payment
+       ↓
+4. AI returns:
+      • Risk level
+      • Recommended action
+      • Reason
+      • Confidence score
+       ↓
+5. Backend validates the recommendation
+       ↓
+6. Recovery action is executed
+       ↓
+7. Recovery result is recorded
+       ↓
+8. Razorpay webhook confirms successful payment
+       ↓
+9. Payment status is updated
+       ↓
+10. Analytics and audit trail are updated
+
+Example
 Payment
-₹3,000
+Amount: ₹3,000
 Status: FAILED
-Failure: Insufficient balance
+Failure Reason: Insufficient Balance
 
-RecoverAI sends the payment information and customer history to Gemini.
+        ↓
 
-The AI may determine:
+Gemini Analysis
 
 Risk: MEDIUM
+Recommendation: SEND PAYMENT LINK
+Confidence: 85%
 
-Recommendation:
-SEND PAYMENT LINK
+        ↓
 
-Confidence:
-85%
+Recovery Action
 
-RecoverAI then creates a Razorpay Test Mode Payment Link.
+Razorpay Payment Link Created
 
-The customer completes the test payment.
+        ↓
 
-Razorpay sends:
+Customer Completes Payment
+
+        ↓
+
+Razorpay Webhook
 
 payment_link.paid
 
-to RecoverAI.
+        ↓
 
-RecoverAI verifies the webhook and updates:
+RecoverAI
 
-Payment Status:
-SUCCESS
-
-Recovery Status:
-RECOVERED
-
-The result is then reflected in the analytics and audit trail.
-
-🛡️ Recovery Stopping Rules
-
-RecoverAI does not continuously retry failed payments.
-
-Recovery stops when:
-
-Payment is successfully recovered
-Customer action is required
-AI recommends no action
-The recovery workflow reaches a terminal state
-
-This prevents uncontrolled recovery attempts.
-
-🧪 Test Mode
-
-RecoverAI uses Razorpay Test Mode for development and demonstration.
-
-No real money is moved during the demo.
-
-The complete recovery workflow can therefore be tested safely:
-
-Failed Payment
-      ↓
-Gemini Analysis
-      ↓
-Recovery Decision
-      ↓
-Razorpay Test Payment Link
-      ↓
-Test Payment
-      ↓
-Webhook
-      ↓
-Recovered
-📈 Why RecoverAI?
-
-RecoverAI is designed around one goal:
-
-Recover revenue intelligently while keeping recovery actions controlled, explainable, and auditable.
-
-Instead of treating every failed payment the same way, the system considers the failure context and customer history before selecting an intervention.
-
-🎯 Buildathon Track
-
-Razorpay AI Buildathon
-
-Track 03 — AI Revenue Recovery
-
-RecoverAI addresses the core revenue recovery workflow:
-
-Detect → Analyze → Decide → Act → Recover → Record
-🔮 Future Improvements
-
-Potential future enhancements include:
-
-Automated customer notifications
-WhatsApp / SMS recovery workflows
-Subscription payment recovery
-Smart retry scheduling
-B2B invoice recovery
-Promise-to-pay workflows
-Recovery prioritization across large payment batches
-Recovery performance prediction
-More advanced customer segmentation
-👩‍💻 Author
-
-Reethii
-
-RecoverAI — AI Revenue Recovery Agent
-
-Built for the Razorpay AI Buildathon.
+Payment Status: SUCCESS
+Recovery Result: RECOVERED
 
 
-### One important thing
+This is a strong section for the README because a reviewer can understand the **actual end-to-end demo flow** in a few seconds.
 
-I deliberately **didn't claim features that aren't actually implemented** as completed features. For example, the README says WhatsApp/SMS and subscription recovery are *future improvements*, rather than pretending they're already working. That's much better for a judge reviewing the repository.
+Paste **Section 10** and tell me **done**.
 
-Your Gemini implementation really does constrain the model to those four recommendations and prohibits refunds, moving money, and unlimited retries, so those sections accurately represent the current backend. :contentReference[oaicite:2]{index=2}
+Next we'll add **Section 11 — Stopping Rules & Recovery Outcomes**.
 
-### What you do now
+## Stopping Rules & Recovery Outcomes
 
-Create:
+RecoverAI follows bounded recovery rules to prevent unnecessary or repeated actions.
+
+### Recovery Outcomes
+
+| Outcome | Meaning |
+|---|---|
+| `RECOVERED` | Payment was successfully recovered |
+| `CUSTOMER_ACTION_REQUIRED` | Customer needs to complete an action |
+| `NO_ACTION` | No recovery action is required |
+
+### Stopping Rules
+
+The recovery workflow stops when:
+
+- The payment is successfully recovered.
+- A Razorpay Payment Link has been created and customer action is required.
+- Gemini recommends `NO ACTION`.
+- The payment has already been recovered.
+
+Once a recovery outcome is reached, RecoverAI does not continue performing unnecessary automated recovery actions.
+
+This ensures that the agent remains **bounded, predictable, and auditable**.
+
+## Test Mode & Demo
+
+RecoverAI is developed and demonstrated using **Razorpay Test Mode**.
+
+No real money is involved during testing.
+
+### Demo Capabilities
+
+The application can demonstrate:
+
+- Failed payment detection
+- AI-powered payment analysis
+- Risk assessment
+- Recovery recommendation
+- Retry-based recovery simulation
+- Razorpay Payment Link creation
+- Customer-action-required recovery
+- Razorpay webhook confirmation
+- Successful payment recovery
+- Recovery analytics
+- Recovery audit trail
+
+### Payment Link Demo
+
+For a failed payment where Gemini recommends `SEND PAYMENT LINK`:
 
 ```text
-D:\RAZOR PAY PROJ\README.md
+Failed Payment
+      ↓
+Gemini Recommendation
+      ↓
+SEND PAYMENT LINK
+      ↓
+Razorpay Test Payment Link Created
+      ↓
+Customer Opens Payment Link
+      ↓
+Test Payment Completed
+      ↓
+Razorpay Webhook
+      ↓
+RecoverAI Marks Payment as RECOVERED
+
+## API Endpoints
+
+RecoverAI exposes REST APIs through the FastAPI backend.
+
+### Payment APIs
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/payments` | Retrieve monitored payments |
+| `GET` | `/payments/{payment_id}` | Retrieve a specific payment |
+| `GET` | `/payments/{payment_id}/analyze` | Analyze a payment using AI |
+| `POST` | `/payments/{payment_id}/recover` | Execute the recommended recovery action |
+
+### Customer APIs
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/customers` | Retrieve customers |
+
+### Recovery & Analytics APIs
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/recovery-logs` | Retrieve recovery audit logs |
+
+### Razorpay Integration
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/webhooks/razorpay` | Receive Razorpay webhook events |
+
+### API Documentation
+
+When the FastAPI backend is running, interactive API documentation is available at:
+
+```text
+http://localhost:8000/docs
+
+This section makes your project look much more like a **real backend product**, rather than just a frontend demo.
+
+## Why RecoverAI?
+
+RecoverAI is designed around a simple idea:
+
+> **A failed payment should be treated as a recoverable revenue opportunity, not just an error.**
+
+Instead of stopping at payment-failure detection, RecoverAI combines:
+
+- **AI reasoning** to understand payment context
+- **Risk assessment** to prioritize revenue at risk
+- **Bounded actions** to recover payments safely
+- **Razorpay integration** to execute real payment-link recovery
+- **Webhooks** to confirm successful recovery
+- **Analytics** to measure recovery performance
+- **Audit logs** to maintain transparency
+
+The result is an end-to-end recovery agent that can **detect → reason → act → verify → stop**.
+
+## Future Improvements
+
+RecoverAI can be extended into a more advanced revenue recovery platform with additional capabilities.
+
+### Planned Improvements
+
+- **Smart retry scheduling** based on payment failure patterns.
+- **Customer segmentation** for personalized recovery strategies.
+- **Hinglish voice recovery** for customer communication.
+- **B2B receivables recovery** with promise-to-pay workflows.
+- **Subscription payment recovery** for recurring payments.
+- **Checkout drop-off detection** and recovery.
+- **Advanced revenue forecasting** using historical recovery data.
+- **Multi-channel customer communication** through email, SMS, and messaging platforms.
+- **Production-grade payment integrations** beyond Test Mode.
+- **Advanced AI evaluation** to continuously measure recovery effectiveness.
+
+These improvements could help RecoverAI evolve from a Buildathon MVP into a production-ready revenue recovery platform.
+
+## Buildathon
+
+RecoverAI was built for the **Razorpay Buildathon — Track 03: AI Revenue Recovery**.
+
+### Track Focus
+
+The project focuses on building an AI agent that can:
+
+- Detect revenue at risk
+- Understand payment failure context
+- Determine an appropriate intervention
+- Execute a bounded recovery workflow
+- Verify recovery outcomes
+- Maintain an audit trail
+
+RecoverAI implements these concepts through AI-powered payment analysis, Razorpay Payment Links, webhook-based confirmation, recovery analytics, and controlled stopping rules.
+
+---
+
+## Author
+
+**Reethii**
+
+Built as a solo project for the Razorpay Buildathon.
+
+---
+
+## License
+
+This project is created for educational, demonstration, and Buildathon purposes.
