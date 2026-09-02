@@ -8,6 +8,8 @@ It detects failed payments, analyzes the reason for payment failure using **Goog
 
 > **Buildathon Track:** Track 03 — AI Revenue Recovery
 
+---
+
 ## Problem Statement
 
 Failed payments create significant revenue leakage for businesses.
@@ -27,6 +29,8 @@ RecoverAI goes one step further by asking:
 > **Why did the payment fail, what should happen next, and can the revenue be recovered safely?**
 
 The system uses AI to analyze payment context and recommend an appropriate recovery action while following predefined safety boundaries and stopping rules.
+
+---
 
 ## What RecoverAI Does
 
@@ -49,6 +53,8 @@ RecoverAI provides an end-to-end AI-driven workflow for recovering revenue from 
 - **No Action**
 
 This creates a complete loop from **payment failure → AI decision → recovery action → outcome tracking**.
+
+---
 
 ## Key Features
 
@@ -107,6 +113,8 @@ Every recovery action is recorded with information such as:
 
 This makes the recovery workflow traceable and transparent.
 
+---
+
 ## AI Safety & Boundaries
 
 RecoverAI is designed with controlled and bounded AI decision-making.
@@ -135,9 +143,13 @@ The recovery workflow stops when:
 
 These boundaries ensure that automation remains controlled, traceable, and aligned with the recovery workflow.
 
+---
+
 ## System Architecture
 
-RecoverAI follows a simple full-stack architecture connecting the frontend, backend, AI layer, database, and Razorpay.
+RecoverAI follows a full-stack architecture connecting the frontend, backend, AI layer, database, and Razorpay.
+
+### Architecture
 
 ```text
                     ┌──────────────────────┐
@@ -147,8 +159,8 @@ RecoverAI follows a simple full-stack architecture connecting the frontend, back
                                │
                                ▼
                     ┌──────────────────────┐
-                    │    FastAPI Backend    │
-                    │  Recovery Orchestrator│
+                    │    FastAPI Backend   │
+                    │ Recovery Orchestrator│
                     └───────┬───────┬──────┘
                             │       │
                  ┌──────────┘       └──────────┐
@@ -171,8 +183,11 @@ RecoverAI follows a simple full-stack architecture connecting the frontend, back
                   │ Razorpay Webhooks  │
                   │  payment_link.paid │
                   └────────────────────┘
-## Recovery
+```
 
+### Recovery Flow
+
+```text
 Failed Payment
       ↓
 Payment & Customer Context
@@ -190,20 +205,9 @@ Webhook Confirmation
 Database & Audit Trail Update
       ↓
 Recovery Analytics
+```
 
-### Important
-
-This section gives your README a **visual architecture diagram** instead of a wall of text, which makes the project much easier for a judge or recruiter to understand quickly.
-
-Your README now has:
-
-```text
-1. RecoverAI / Introduction
-2. Problem Statement
-3. What RecoverAI Does
-4. Key Features
-5. AI Safety & Boundaries
-6. System Architecture
+---
 
 ## Tech Stack
 
@@ -233,6 +237,8 @@ The AI returns:
 
 The backend validates the AI response before using it in the recovery workflow.
 
+---
+
 ## Project Structure
 
 ```text
@@ -241,9 +247,7 @@ RecoverAI/
 ├── backend/
 │   ├── main.py              # FastAPI application and recovery logic
 │   ├── models.py            # Database models
-│   ├── database.py          # Database configuration
-│   ├── .env                 # Local secrets (not committed)
-│   └── venv/                # Python virtual environment (not committed)
+│   └── database.py          # Database configuration
 │
 ├── frontend/
 │   ├── src/
@@ -255,23 +259,27 @@ RecoverAI/
 │   └── vite.config.js       # Vite configuration
 │
 ├── .gitignore               # Git ignore rules
-├── README.md                # Project documentation
-└── GIT_SETUP.md             # Git/GitHub setup notes
+└── README.md                # Project documentation
+```
 
-Main Components
+### Main Components
 
-Backend:
-Handles API requests and recovery workflows.
-Connects to the database.
-Communicates with Gemini.
-Integrates with Razorpay APIs.
-Processes Razorpay webhook events.
+**Backend**
 
-Frontend:
-Displays payment and customer information.
-Shows AI risk analysis.
-Provides recovery actions.
-Displays recovery analytics and audit information.
+- Handles API requests and recovery workflows.
+- Connects to the database.
+- Communicates with Gemini.
+- Integrates with Razorpay APIs.
+- Processes Razorpay webhook events.
+
+**Frontend**
+
+- Displays payment and customer information.
+- Shows AI risk analysis.
+- Provides recovery actions.
+- Displays recovery analytics and audit information.
+
+---
 
 ## Getting Started
 
@@ -292,68 +300,64 @@ Make sure the following are installed:
 ```bash
 git clone https://github.com/Reethii/RecoverAI.git
 cd RecoverAI
+```
 
-2. Backend Setup
+### 2. Backend Setup
 
-Open a terminal in the project root and run:
+Open a terminal in the project root:
 
+```powershell
 cd backend
 python -m venv venv
-
-Activate the virtual environment.
-
-Windows PowerShell:
-
 venv\Scripts\activate
+```
 
-Install the required Python packages:
+Install the required Python dependencies used by the backend.
 
-pip install -r requirements.txt
+Create a `.env` file inside the `backend` folder:
 
-Create a .env file inside the backend folder:
-
+```env
 GEMINI_API_KEY=your_gemini_api_key
 RAZORPAY_KEY_ID=your_razorpay_test_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
 RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
+```
 
 Start the FastAPI backend:
 
+```powershell
 uvicorn main:app --reload
+```
 
 The backend will run at:
 
+```text
 http://localhost:8000
-3. Frontend Setup
+```
+
+### 3. Frontend Setup
 
 Open a second terminal:
 
+```powershell
 cd frontend
 npm install
 npm run dev
+```
 
 The React application will be available at the local URL shown by Vite.
 
-4. Razorpay Webhook
+### 4. Razorpay Webhook
 
 For local webhook testing, expose the FastAPI server through a public HTTPS tunnel and configure the following endpoint in Razorpay Test Mode:
 
+```text
 /webhooks/razorpay
+```
 
 The webhook is used to receive payment-link payment events and update the recovery status.
 
-
-### ⚠️ One important check before you paste
-
-This section assumes your backend has a `requirements.txt` file.
-
-From the repository files we previously committed, I **don't have evidence that `backend/requirements.txt` currently exists**. So **don't paste the `pip install -r requirements.txt` line yet** if you're unsure.
-
-If you don't have `requirements.txt`, we'll make this section accurate rather than documenting a command that won't work.
-
-For now, paste everything **up to the Backend Setup section**, and we'll verify the dependency part together.
-
-Say **done** when you've added it. Then we'll do **Section 10 — Example Recovery Flow**.
+---
 
 ## Example Recovery Flow
 
@@ -383,8 +387,11 @@ A typical RecoverAI recovery flow works as follows:
 9. Payment status is updated
        ↓
 10. Analytics and audit trail are updated
+```
 
-Example
+### Example
+
+```text
 Payment
 Amount: ₹3,000
 Status: FAILED
@@ -420,13 +427,11 @@ RecoverAI
 
 Payment Status: SUCCESS
 Recovery Result: RECOVERED
+```
 
+This demonstrates the complete journey from a failed payment to successful revenue recovery.
 
-This is a strong section for the README because a reviewer can understand the **actual end-to-end demo flow** in a few seconds.
-
-Paste **Section 10** and tell me **done**.
-
-Next we'll add **Section 11 — Stopping Rules & Recovery Outcomes**.
+---
 
 ## Stopping Rules & Recovery Outcomes
 
@@ -452,6 +457,8 @@ The recovery workflow stops when:
 Once a recovery outcome is reached, RecoverAI does not continue performing unnecessary automated recovery actions.
 
 This ensures that the agent remains **bounded, predictable, and auditable**.
+
+---
 
 ## Test Mode & Demo
 
@@ -495,6 +502,11 @@ Test Payment Completed
 Razorpay Webhook
       ↓
 RecoverAI Marks Payment as RECOVERED
+```
+
+The entire workflow can be demonstrated without processing real transactions.
+
+---
 
 ## API Endpoints
 
@@ -533,8 +545,9 @@ When the FastAPI backend is running, interactive API documentation is available 
 
 ```text
 http://localhost:8000/docs
+```
 
-This section makes your project look much more like a **real backend product**, rather than just a frontend demo.
+---
 
 ## Why RecoverAI?
 
@@ -547,12 +560,14 @@ Instead of stopping at payment-failure detection, RecoverAI combines:
 - **AI reasoning** to understand payment context
 - **Risk assessment** to prioritize revenue at risk
 - **Bounded actions** to recover payments safely
-- **Razorpay integration** to execute real payment-link recovery
+- **Razorpay integration** to execute payment-link recovery
 - **Webhooks** to confirm successful recovery
 - **Analytics** to measure recovery performance
 - **Audit logs** to maintain transparency
 
 The result is an end-to-end recovery agent that can **detect → reason → act → verify → stop**.
+
+---
 
 ## Future Improvements
 
@@ -572,6 +587,8 @@ RecoverAI can be extended into a more advanced revenue recovery platform with ad
 - **Advanced AI evaluation** to continuously measure recovery effectiveness.
 
 These improvements could help RecoverAI evolve from a Buildathon MVP into a production-ready revenue recovery platform.
+
+---
 
 ## Buildathon
 
