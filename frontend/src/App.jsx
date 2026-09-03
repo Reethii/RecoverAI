@@ -1556,6 +1556,7 @@ const renderRecoveryPage = () => {
 
               <tr>
                 <th>Payment ID</th>
+                <th>Customer ID</th>
                 <th>Customer</th>
                 <th>Amount</th>
                 <th>Status</th>
@@ -1571,7 +1572,7 @@ const renderRecoveryPage = () => {
 
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="empty"
                   >
                     Loading payments...
@@ -1582,7 +1583,7 @@ const renderRecoveryPage = () => {
 
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="empty"
                   >
                     No payments match your search.
@@ -1608,9 +1609,15 @@ const renderRecoveryPage = () => {
                       <tr key={payment.id}>
 
                         <td>
-                          <strong>
+                          <span className="id-badge payment-id-badge">
                             #{payment.id}
-                          </strong>
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="id-badge customer-id-badge">
+                            #{payment.customer_id}
+                          </span>
                         </td>
 
                         <td>
@@ -1807,9 +1814,10 @@ const renderRecoveryPage = () => {
             <table className="payments-table">
               <thead>
                 <tr>
+                  <th>Customer ID</th>
                   <th>Customer</th>
                   <th>Email</th>
-                  <th>Payments</th>
+                  <th>Payment IDs</th>
                   <th>Total Value</th>
                   <th>Failed</th>
                   <th>Profile</th>
@@ -1818,15 +1826,20 @@ const renderRecoveryPage = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="empty">Loading customers...</td>
+                    <td colSpan="7" className="empty">Loading customers...</td>
                   </tr>
                 ) : customerRows.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="empty">No customers available.</td>
+                    <td colSpan="7" className="empty">No customers available.</td>
                   </tr>
                 ) : (
                   customerRows.map((customer) => (
                     <tr key={customer.id}>
+                      <td>
+                        <span className="id-badge customer-id-badge">
+                          #{customer.id}
+                        </span>
+                      </td>
                       <td>
                         <div className="customer">
                           <div className="customer-avatar">
@@ -1834,12 +1847,34 @@ const renderRecoveryPage = () => {
                           </div>
                           <div>
                             <strong>{customer.name || "Unknown Customer"}</strong>
-                            <small>Customer #{customer.id}</small>
+                            <small>Payment records linked below</small>
                           </div>
                         </div>
                       </td>
                       <td>{customer.email || "—"}</td>
-                      <td>{customer.paymentCount}</td>
+                      <td>
+                        <div className="payment-id-list">
+                          {customerPayments.length > 0 ? (
+                            customerPayments.map((payment) => (
+                              <span
+                                className={`id-badge payment-id-badge ${
+                                  payment.status?.toUpperCase() === "FAILED"
+                                    ? "id-failed"
+                                    : "id-success"
+                                }`}
+                                key={payment.id}
+                              >
+                                #{payment.id}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="muted-id">—</span>
+                          )}
+                        </div>
+                        <small className="payment-count-label">
+                          {customer.paymentCount} payment{customer.paymentCount !== 1 ? "s" : ""}
+                        </small>
+                      </td>
                       <td className="amount">₹{customer.total.toLocaleString("en-IN")}</td>
                       <td>
                         <span className={customer.failed ? "status status-failed" : "status status-success"}>

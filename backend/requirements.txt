@@ -6,3 +6,4 @@ requests
 google-genai
 pydantic
 python-multipart
+psycopg2-binary

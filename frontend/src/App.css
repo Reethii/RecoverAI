@@ -2179,3 +2179,73 @@ main {
   }
 }
 \n\n/* Razorpay payment-link result */\n.razorpay-link-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 16px 0 12px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(99, 102, 241, 0.22);\n  background: rgba(99, 102, 241, 0.06);\n}\n\n.razorpay-link-icon {\n  width: 38px;\n  height: 38px;\n  display: grid;\n  place-items: center;\n  flex: 0 0 38px;\n  border-radius: 11px;\n  font-size: 19px;\n  font-weight: 800;\n  background: rgba(99, 102, 241, 0.14);\n}\n\n.razorpay-link-content {\n  display: flex;\n  flex: 1;\n  min-width: 0;\n  flex-direction: column;\n  gap: 3px;\n}\n\n.razorpay-link-content strong {\n  font-size: 13px;\n}\n\n.razorpay-link-content span {\n  font-size: 12px;\n  opacity: 0.72;\n}\n\n.razorpay-link-content small {\n  margin-top: 3px;\n  opacity: 0.58;\n  overflow-wrap: anywhere;\n}\n\n.razorpay-link-button {\n  flex: 0 0 auto;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 10px 13px;\n  border-radius: 10px;\n  text-decoration: none;\n  font-size: 12px;\n  font-weight: 800;\n  border: 1px solid rgba(99, 102, 241, 0.28);\n}\n\n@media (max-width: 700px) {\n  .razorpay-link-card {\n    align-items: flex-start;\n    flex-wrap: wrap;\n  }\n\n  .razorpay-link-button {\n    width: 100%;\n  }\n}\n
+/* =========================================================
+   CUSTOMER / PAYMENT ID VISIBILITY
+   ========================================================= */
+
+.id-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.payment-id-badge {
+  background: #f2edff;
+  color: #6437e8;
+  border: 1px solid #ded4ff;
+}
+
+.customer-id-badge {
+  background: #eef6ff;
+  color: #175cd3;
+  border: 1px solid #cfe2ff;
+}
+
+.payment-id-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.payment-id-list .id-badge {
+  min-width: 44px;
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.payment-id-list .id-failed {
+  background: #fff1f3;
+  color: #c01048;
+  border-color: #ffd1dc;
+}
+
+.payment-id-list .id-success {
+  background: #ecfdf3;
+  color: #027a48;
+  border-color: #b7ebcd;
+}
+
+.payment-count-label {
+  display: block;
+  margin-top: 6px;
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.muted-id {
+  color: #98a2b3;
+}
+
+@media (max-width: 1000px) {
+  .payment-id-list {
+    max-width: 180px;
+  }
+}
