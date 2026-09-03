@@ -1743,164 +1743,202 @@ const renderRecoveryPage = () => {
   // --------------------------------------------------
   // ADDITIONAL PAGES
   // --------------------------------------------------
-
   const renderCustomersPage = () => {
-    const customerRows = customers.map((customer) => {
-      const customerPayments = payments.filter(
-        (payment) => payment.customer_id === customer.id
-      );
+  const customerRows = customers.map((customer) => {
+    const customerPayments = payments.filter(
+      (payment) => payment.customer_id === customer.id
+    );
 
-      const total = customerPayments.reduce(
-        (sum, payment) => sum + Number(payment.amount || 0),
-        0
-      );
+    const total = customerPayments.reduce(
+      (sum, payment) => sum + Number(payment.amount || 0),
+      0
+    );
 
-      const failed = customerPayments.filter(
-        (payment) => payment.status?.toUpperCase() === "FAILED"
-      ).length;
+    const failed = customerPayments.filter(
+      (payment) => payment.status?.toUpperCase() === "FAILED"
+    ).length;
 
-      return {
-        ...customer,
-        paymentCount: customerPayments.length,
-        total,
-        failed,
-      };
-    });
+    return {
+      ...customer,
+      paymentCount: customerPayments.length,
+      total,
+      failed,
+    };
+  });
 
-    return (
-      <div className="page-container">
-        <div className="page-title-row">
+  return (
+    <div className="page-container">
+      <div className="page-title-row">
+        <div>
+          <h2 className="page-title">♙ Customers</h2>
+          <p className="page-subtitle">
+            Customer profiles and payment history
+          </p>
+        </div>
+
+        <button className="refresh-button" onClick={loadData}>
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div className="payment-summary-grid">
+        <div className="payment-summary-card">
+          <span>Total Customers</span>
+          <strong>{customers.length}</strong>
+        </div>
+
+        <div className="payment-summary-card">
+          <span>Customers With Payments</span>
+          <strong>
+            {customerRows.filter((c) => c.paymentCount > 0).length}
+          </strong>
+        </div>
+
+        <div className="payment-summary-card">
+          <span>Customer Payment Value</span>
+          <strong>
+            ₹
+            {customerRows
+              .reduce((sum, customer) => sum + customer.total, 0)
+              .toLocaleString("en-IN")}
+          </strong>
+        </div>
+
+        <div className="payment-summary-card">
+          <span>Failed Payments</span>
+          <strong className="danger-text">{stats.failedCount}</strong>
+        </div>
+      </div>
+
+      <div className="panel full-page-panel">
+        <div className="panel-header">
           <div>
-            <h2 className="page-title">♙ Customers</h2>
-            <p className="page-subtitle">
-              Customer profiles and payment history
-            </p>
-          </div>
-          <button className="refresh-button" onClick={loadData}>
-            ↻ Refresh
-          </button>
-        </div>
-
-        <div className="payment-summary-grid">
-          <div className="payment-summary-card">
-            <span>Total Customers</span>
-            <strong>{customers.length}</strong>
-          </div>
-          <div className="payment-summary-card">
-            <span>Customers With Payments</span>
-            <strong>{customerRows.filter((c) => c.paymentCount > 0).length}</strong>
-          </div>
-          <div className="payment-summary-card">
-            <span>Customer Payment Value</span>
-            <strong>
-              ₹{customerRows.reduce((s, c) => s + c.total, 0).toLocaleString("en-IN")}
-            </strong>
-          </div>
-          <div className="payment-summary-card">
-            <span>Failed Payments</span>
-            <strong className="danger-text">{stats.failedCount}</strong>
+            <h2>♙ &nbsp; Customer Directory</h2>
+            <p>Customers connected to your payment data</p>
           </div>
         </div>
 
-        <div className="panel full-page-panel">
-          <div className="panel-header">
-            <div>
-              <h2>♙ &nbsp; Customer Directory</h2>
-              <p>Customers connected to your payment data</p>
-            </div>
-          </div>
+        <div className="full-table-wrapper">
+          <table className="payments-table">
+            <thead>
+              <tr>
+                <th>Customer ID</th>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Payment IDs</th>
+                <th>Total Value</th>
+                <th>Failed</th>
+                <th>Profile</th>
+              </tr>
+            </thead>
 
-          <div className="full-table-wrapper">
-            <table className="payments-table">
-              <thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th>Customer ID</th>
-                  <th>Customer</th>
-                  <th>Email</th>
-                  <th>Payment IDs</th>
-                  <th>Total Value</th>
-                  <th>Failed</th>
-                  <th>Profile</th>
+                  <td colSpan="7" className="empty">
+                    Loading customers...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="empty">Loading customers...</td>
-                  </tr>
-                ) : customerRows.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="empty">No customers available.</td>
-                  </tr>
-                ) : (
-                  customerRows.map((customer) => (
+              ) : customerRows.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="empty">
+                    No customers available.
+                  </td>
+                </tr>
+              ) : (
+                customerRows.map((customer) => {
+                  const linkedPayments = payments.filter(
+                    (payment) => payment.customer_id === customer.id
+                  );
+
+                  return (
                     <tr key={customer.id}>
                       <td>
                         <span className="id-badge customer-id-badge">
                           #{customer.id}
                         </span>
                       </td>
+
                       <td>
                         <div className="customer">
                           <div className="customer-avatar">
-                            {customer.name?.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "CU"}
+                            {customer.name
+                              ?.split(" ")
+                              .map((word) => word[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase() || "CU"}
                           </div>
+
                           <div>
-                            <strong>{customer.name || "Unknown Customer"}</strong>
+                            <strong>
+                              {customer.name || "Unknown Customer"}
+                            </strong>
                             <small>Payment records linked below</small>
                           </div>
                         </div>
                       </td>
+
                       <td>{customer.email || "—"}</td>
+
                       <td>
                         <div className="payment-id-list">
-  {payments.filter((payment) => payment.customer_id === customer.id).length > 0 ? (
-    payments
-      .filter((payment) => payment.customer_id === customer.id)
-      .map((payment) => (
-        <span
-          className={`id-badge payment-id-badge ${
-            payment.status?.toUpperCase() === "FAILED"
-              ? "id-failed"
-              : "id-success"
-          }`}
-          key={payment.id}
-        >
-          #{payment.id}
-        </span>
-      ))
-  ) : (
-    <span className="muted-id">—</span>
-  )}
-</div>
+                          {linkedPayments.length > 0 ? (
+                            linkedPayments.map((payment) => (
+                              <span
+                                className={`id-badge payment-id-badge ${
+                                  payment.status?.toUpperCase() === "FAILED"
+                                    ? "id-failed"
+                                    : "id-success"
+                                }`}
+                                key={payment.id}
+                              >
+                                #{payment.id}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="muted-id">—</span>
+                          )}
+                        </div>
+
                         <small className="payment-count-label">
-                          {customer.paymentCount} payment{customer.paymentCount !== 1 ? "s" : ""}
+                          {customer.paymentCount} payment
+                          {customer.paymentCount !== 1 ? "s" : ""}
                         </small>
                       </td>
-                      <td className="amount">₹{customer.total.toLocaleString("en-IN")}</td>
+
+                      <td className="amount">
+                        ₹{customer.total.toLocaleString("en-IN")}
+                      </td>
+
                       <td>
-                        <span className={customer.failed ? "status status-failed" : "status status-success"}>
+                        <span
+                          className={
+                            customer.failed
+                              ? "status status-failed"
+                              : "status status-success"
+                          }
+                        >
                           {customer.failed}
                         </span>
                       </td>
+
                       <td>
-                        <span className="status status-success">ACTIVE</span>
+                        <span className="status status-success">
+                          ACTIVE
+                        </span>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="table-footer">
-            Showing {customerRows.length} customer{customerRows.length !== 1 ? "s" : ""}
-          </div>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    );
-  };
-
+    </div>
+  );
+};
   const renderAnalyticsPage = () => {
     const totalValue = payments.reduce(
       (sum, payment) => sum + Number(payment.amount || 0),
