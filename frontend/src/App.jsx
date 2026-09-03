@@ -1854,23 +1854,25 @@ const renderRecoveryPage = () => {
                       <td>{customer.email || "—"}</td>
                       <td>
                         <div className="payment-id-list">
-                          {customerPayments.length > 0 ? (
-                            customerPayments.map((payment) => (
-                              <span
-                                className={`id-badge payment-id-badge ${
-                                  payment.status?.toUpperCase() === "FAILED"
-                                    ? "id-failed"
-                                    : "id-success"
-                                }`}
-                                key={payment.id}
-                              >
-                                #{payment.id}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="muted-id">—</span>
-                          )}
-                        </div>
+  {payments.filter((payment) => payment.customer_id === customer.id).length > 0 ? (
+    payments
+      .filter((payment) => payment.customer_id === customer.id)
+      .map((payment) => (
+        <span
+          className={`id-badge payment-id-badge ${
+            payment.status?.toUpperCase() === "FAILED"
+              ? "id-failed"
+              : "id-success"
+          }`}
+          key={payment.id}
+        >
+          #{payment.id}
+        </span>
+      ))
+  ) : (
+    <span className="muted-id">—</span>
+  )}
+</div>
                         <small className="payment-count-label">
                           {customer.paymentCount} payment{customer.paymentCount !== 1 ? "s" : ""}
                         </small>
