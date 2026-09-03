@@ -180,27 +180,37 @@ CUSTOMER PAYMENT HISTORY:
 
 Return your analysis using the required JSON structure.
 """
+    for attempt in range(3):
+        try:
+            response = gemini_client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=GeminiPaymentAnalysis,
+                ),
+            )
 
-    try:
-        response = gemini_client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=GeminiPaymentAnalysis,
-            ),
-        )
+            result = response.parsed
 
-        result = response.parsed
+            if result:
+                return result.model_dump()
 
-        if result:
-            return result.model_dump()
+            print(f"Gemini returned no parsed result (attempt {attempt + 1}/3)")
 
-        return None
+        except Exception as e:
+            print(f"Gemini analysis failed (attempt {attempt + 1}/3):", e)
 
-    except Exception as e:
-        print("Gemini analysis failed:", e)
-        return None
+            # Retry temporary Gemini service/capacity errors.
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
+                if attempt < 2:
+                    import time
+                    time.sleep(2)
+                    continue
+
+            return None
+
+    return None
 # ============================================================
 # FASTAPI APPLICATION
 # ============================================================
