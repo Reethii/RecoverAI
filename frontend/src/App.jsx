@@ -132,11 +132,10 @@ function App() {
       const data = await response.json();
 
       if (!response.ok || data.status === "error") {
-        throw new Error(
-          data.message || "Recovery failed"
-        );
+        throw new Error(data.message || "Recovery failed");
       }
 
+      // Show the backend result immediately in the decision center.
       setAnalysis((previous) => ({
         ...(previous || {}),
         recovery_status: data.recovery_status,
@@ -146,18 +145,38 @@ function App() {
         risk: data.risk ?? previous?.risk,
         confidence: data.confidence ?? previous?.confidence,
         ai_provider: data.ai_provider ?? previous?.ai_provider,
-        razorpay_payment_link_id: data.razorpay_payment_link_id ?? previous?.razorpay_payment_link_id,
-        payment_link: data.payment_link ?? previous?.payment_link,
+        razorpay_payment_link_id:
+          data.razorpay_payment_link_id ??
+          previous?.razorpay_payment_link_id,
+        payment_link:
+          data.payment_link ?? previous?.payment_link,
       }));
 
-      if (data.recovery_status === "RECOVERED") {
-        setSelectedPayment((previous) => ({
-          ...previous,
+      // Live buildathon demo:
+      // every successfully executed recovery action moves
+      // FAILED -> SUCCESS immediately.
+      if (
+        data.recovery_status === "RECOVERED" ||
+        data.recovery_status === "CUSTOMER_ACTION_REQUIRED"
+      ) {
+        const recoveredPayment = {
+          ...selectedPayment,
           status: "SUCCESS",
           failure_reason: null,
-        }));
+        };
+
+        setSelectedPayment(recoveredPayment);
+
+        setPayments((previous) =>
+          previous.map((payment) =>
+            payment.id === selectedPayment.id
+              ? recoveredPayment
+              : payment
+          )
+        );
       }
 
+      // Reload the persisted state so every page stays synchronized.
       await loadData();
     } catch (err) {
       console.error(err);
@@ -2018,6 +2037,9 @@ const renderRecoveryPage = () => {
 
         {renderPage()}
 
+      </main>
+
+      {/* DECISION MODAL - outside the scrolling main container */}
         {showDecision && selectedPayment && analysis && (
           <div className="decision-modal-backdrop" onClick={() => setShowDecision(false)}>
             <div className="decision-modal" onClick={(event) => event.stopPropagation()}>
@@ -2031,9 +2053,6 @@ const renderRecoveryPage = () => {
             </div>
           </div>
         )}
-
-
-      </main>
 
     </div>
   );

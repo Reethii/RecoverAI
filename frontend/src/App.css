@@ -2772,3 +2772,45 @@ main {
   }
 }
 
+
+
+/* =========================================================
+   RECOVERAI - FINAL DECISION MODAL FIX
+   ========================================================= */
+
+.decision-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  width: 100vw;
+  height: 100vh;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px;
+  box-sizing: border-box;
+  background: rgba(13, 16, 32, 0.62);
+}
+
+.decision-modal {
+  width: min(720px, 100%);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 24px 80px rgba(15, 18, 40, 0.28);
+  box-sizing: border-box;
+}
+
+@media (max-width: 650px) {
+  .decision-modal-backdrop {
+    padding: 14px;
+  }
+
+  .decision-modal {
+    max-height: 94vh;
+    padding: 20px;
+  }
+}

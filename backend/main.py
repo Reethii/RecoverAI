@@ -201,16 +201,8 @@ Return your analysis using the required JSON structure.
         except Exception as e:
             print(f"Gemini analysis failed (attempt {attempt + 1}/3):", e)
 
-            error_text = str(e)
-
-            # Quota/rate-limit errors should immediately use the
-            # deterministic fallback engine instead of wasting retries.
-            if "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
-                print("Gemini quota/rate limit reached. Using RecoverAI fallback engine.")
-                return None
-
             # Retry temporary Gemini service/capacity errors.
-            if "503" in error_text or "UNAVAILABLE" in error_text:
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
                 if attempt < 2:
                     import time
                     time.sleep(2)
@@ -882,8 +874,6 @@ def recover_payment(
             "amount": payment.amount,
             "action": "NO ACTION",
             "recovery_status": "NOT_REQUIRED",
-            "confidence": 1.0,
-            "ai_provider": "System",
             "message": "Payment is already successful"
         }
 
@@ -1119,21 +1109,33 @@ def recover_payment(
         payment_link_url = payment_link.get("short_url")
         payment_link_id = payment_link.get("id")
 
+        # BUILDATHON DEMO MODE:
+        # The Test Mode payment link is the live recovery action.
+        # We immediately mark the payment recovered so the command center
+        # visibly changes FAILED -> SUCCESS.
+        #
+        # Production note: keep CUSTOMER_ACTION_REQUIRED here and let the
+        # payment_link.paid webhook finalize the payment instead.
+        payment.status = "SUCCESS"
+        payment.failure_reason = None
+
         recovery_log = models.RecoveryLog(
             payment_id=payment.id,
             customer_id=payment.customer_id,
             amount=payment.amount,
             risk=risk,
             action=action,
-            result="CUSTOMER_ACTION_REQUIRED",
+            result="RECOVERED",
             reason=(
                 f"{reason} Razorpay Test Mode Payment Link "
-                f"created: {payment_link_id}"
+                f"created: {payment_link_id}. "
+                "Demo recovery completed."
             )
         )
 
         db.add(recovery_log)
         db.commit()
+        db.refresh(payment)
         db.refresh(recovery_log)
 
         return {
@@ -1143,15 +1145,15 @@ def recover_payment(
             "amount": payment.amount,
             "action": action,
             "risk": risk,
-            "recovery_status": "CUSTOMER_ACTION_REQUIRED",
+            "recovery_status": "RECOVERED",
             "recovery_log_id": recovery_log.id,
             "confidence": confidence,
             "ai_provider": ai_provider,
             "razorpay_payment_link_id": payment_link_id,
             "payment_link": payment_link_url,
             "message": (
-                "Razorpay Test Mode Payment Link created. "
-                "Customer action is required to complete payment."
+                "Razorpay Test Mode Payment Link created and "
+                "payment recovered successfully in demo mode."
             )
         }
 
@@ -1161,18 +1163,29 @@ def recover_payment(
 
     if action == "REQUEST_NEW_PAYMENT_METHOD":
 
+        # BUILDATHON DEMO MODE:
+        # Simulate successful completion after the AI recovery action.
+        # Production can keep CUSTOMER_ACTION_REQUIRED until a real
+        # customer payment succeeds.
+        payment.status = "SUCCESS"
+        payment.failure_reason = None
+
         recovery_log = models.RecoveryLog(
             payment_id=payment.id,
             customer_id=payment.customer_id,
             amount=payment.amount,
             risk=risk,
             action=action,
-            result="CUSTOMER_ACTION_REQUIRED",
-            reason=reason
+            result="RECOVERED",
+            reason=(
+                f"{reason} Demo recovery completed after requesting "
+                "a new payment method."
+            )
         )
 
         db.add(recovery_log)
         db.commit()
+        db.refresh(payment)
         db.refresh(recovery_log)
 
         return {
@@ -1182,13 +1195,13 @@ def recover_payment(
             "amount": payment.amount,
             "action": action,
             "risk": risk,
-            "recovery_status": "CUSTOMER_ACTION_REQUIRED",
+            "recovery_status": "RECOVERED",
             "recovery_log_id": recovery_log.id,
             "confidence": confidence,
             "ai_provider": ai_provider,
             "message": (
-                "Customer should provide "
-                "a new payment method"
+                "New payment method recovery action executed "
+                "and payment recovered successfully in demo mode."
             )
         }
 
