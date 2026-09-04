@@ -31,11 +31,14 @@ try:
     existing_customers = db.query(models.Customer).count()
 
     if existing_customers != 0:
-	print(f"Clearing existing demo data ({existing_customers} customers)...")
-    	db.query(models.RecoveryLog).delete()
-    	db.query(models.Payment).delete()
-    	db.query(models.Customer).delete()
-    	db.commit()
+        print(
+            f"Clearing existing demo data "
+            f"({existing_customers} customers)..."
+        )
+        db.query(models.RecoveryLog).delete()
+        db.query(models.Payment).delete()
+        db.query(models.Customer).delete()
+        db.commit()
 
     # --------------------------------------------------------
     # 10 CUSTOMERS
@@ -170,8 +173,16 @@ try:
     # whose current payment has failed.
     # ========================================================
     previous_success_amounts = [
-        1800, 2100, 2500, 2800, 3000,
-        3200, 3500, 3800, 1900, 2300
+        1800,
+        2100,
+        2500,
+        2800,
+        3000,
+        3200,
+        3500,
+        3800,
+        1900,
+        2300
     ]
 
     for i in range(10):
