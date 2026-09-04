@@ -667,7 +667,11 @@ def analyze_payment(
 
         "recommendation": recommendation,
 
-        "reason": reason
+        "reason": reason,
+	
+	"confidence": confidence,
+
+        "ai_provider": ai_provider
     }
 
 
