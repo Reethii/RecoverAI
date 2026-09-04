@@ -2319,3 +2319,239 @@ main {
     max-width: 180px;
   }
 }
+/* =========================================================
+   CLEAN RECOVERY RESULT UI
+   ========================================================= */
+
+.recovery-result {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f0fbf5 0%, #e9f8f0 100%);
+  border: 1px solid #cceedd;
+  box-shadow: 0 5px 16px rgba(30, 100, 70, 0.05);
+}
+
+.recovery-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.recovery-result-header strong {
+  color: #101828;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.recovery-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.recovery-status.recovered {
+  background: #d9f7e6;
+  color: #079455;
+}
+
+.recovery-status.customer_action_required {
+  background: #fff1c7;
+  color: #a15c00;
+}
+
+.recovery-status.no_action {
+  background: #eef0f3;
+  color: #667085;
+}
+
+/* Recovery details: 2 x 2 keeps action names readable */
+.recovery-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recovery-result-grid > div {
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(16, 24, 40, 0.06);
+}
+
+.recovery-result-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: #52b788;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.recovery-result-grid strong {
+  display: block;
+  min-width: 0;
+  color: #101828;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recovery-result-grid > div:first-child strong {
+  font-size: 11px;
+  letter-spacing: -0.02em;
+}
+
+.recovery-result > p {
+  margin: 4px 0 12px;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Compact Razorpay payment-link card */
+.razorpay-link-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid #d8e9df;
+}
+
+.razorpay-link-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.razorpay-link-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.razorpay-link-content strong {
+  color: #101828;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.razorpay-link-content span {
+  color: #667085;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.razorpay-link-content small {
+  margin-top: 2px;
+  color: #98a2b3;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.razorpay-link-button {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: #5b3df5;
+  color: white !important;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.razorpay-link-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(91, 61, 245, 0.22);
+}
+
+.recovery-result > small {
+  display: block;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(16, 24, 40, 0.08);
+  color: #667085;
+  font-size: 10px;
+}
+
+.recovery-result > small strong {
+  color: #475467;
+}
+
+.insight-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 15px;
+}
+
+.insight-actions button {
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .insight-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .recovery-result {
+    padding: 14px;
+  }
+
+  .recovery-result-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recovery-status {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .insight-actions {
+    grid-template-columns: 1fr;
+  }
+}
