@@ -9,6 +9,7 @@ function App() {
   const [recoveryLogs, setRecoveryLogs] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [analysis, setAnalysis] = useState(null);
+  const [showDecision, setShowDecision] = useState(false);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [recovering, setRecovering] = useState(false);
@@ -83,6 +84,7 @@ function App() {
       setAnalyzing(true);
       setSelectedPayment(payment);
       setAnalysis(null);
+      setShowDecision(false);
       setError("");
 
       const response = await fetch(
@@ -889,7 +891,7 @@ const renderRecoveryPage = () => {
               <div><span>RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div>
               <div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div>
             </div>
-            <button className="decision-button" onClick={() => setActivePage("Recovery")}>Open decision →</button>
+            <button className="decision-button" onClick={() => setShowDecision(true)}>Open decision →</button>
           </section>
         )}
       </div>
@@ -1960,6 +1962,21 @@ const renderRecoveryPage = () => {
         {/* CURRENT PAGE */}
 
         {renderPage()}
+
+        {showDecision && selectedPayment && analysis && (
+          <div className="decision-modal-backdrop" onClick={() => setShowDecision(false)}>
+            <div className="decision-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="decision-modal-header"><div><span className="panel-kicker">RECOVERAI DECISION CENTER</span><h2>Payment #{selectedPayment.id} decision</h2><p>{getCustomer(selectedPayment.customer_id)?.name || "Customer"} · ₹{Number(selectedPayment.amount || 0).toLocaleString("en-IN")}</p></div><button className="decision-close" onClick={() => setShowDecision(false)}>×</button></div>
+              <div className="decision-modal-grid"><div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div><div><span>AI RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div><div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div><div><span>AI PROVIDER</span><strong>{analysis.ai_provider || "Gemini"}</strong></div></div>
+              <div className="decision-modal-reason"><span>WHY THIS DECISION?</span><p>{analysis.reason || "RecoverAI analyzed this payment and selected the recommended recovery strategy."}</p></div>
+              {analysis.recovery_status && <div className="decision-modal-recovery"><div><span>RECOVERY STATUS</span><strong>{String(analysis.recovery_status).replaceAll("_", " ")}</strong></div>{analysis.action && <div><span>ACTION EXECUTED</span><strong>{analysis.action}</strong></div>}{analysis.recovery_log_id && <div><span>AUDIT LOG</span><strong>#{analysis.recovery_log_id}</strong></div>}</div>}
+              {analysis.message && <div className="decision-modal-message">{analysis.message}</div>}
+              {analysis.payment_link && <div className="decision-modal-payment-link"><div><span>RAZORPAY PAYMENT LINK</span><strong>Customer action required</strong>{analysis.razorpay_payment_link_id && <small>Link ID: {analysis.razorpay_payment_link_id}</small>}</div><a href={analysis.payment_link} target="_blank" rel="noopener noreferrer">Open Payment Link ↗</a></div>}
+              <div className="decision-modal-actions"><button className="secondary-button" onClick={() => setShowDecision(false)}>Close</button>{!analysis.recovery_status || !["RECOVERED","CUSTOMER_ACTION_REQUIRED","NO_ACTION"].includes(analysis.recovery_status) ? <button className="recover-button" onClick={recoverPayment} disabled={recovering}>{recovering ? "Executing..." : "ϟ Recover Payment"}</button> : <button className="recover-button" onClick={() => setShowDecision(false)}>Decision completed</button>}</div>
+            </div>
+          </div>
+        )}
+
 
       </main>
 
