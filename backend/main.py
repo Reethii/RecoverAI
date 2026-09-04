@@ -580,6 +580,11 @@ def analyze_payment(
             "confidence": ai_result["confidence"],
             "ai_provider": "Gemini"
         }
+    # --------------------------------------------------------
+    # GEMINI FALLBACK METADATA
+    # --------------------------------------------------------
+    confidence = 0.0
+    ai_provider = "Fallback"
 
     # --------------------------------------------------------
     # AI-STYLE DECISION ENGINE
