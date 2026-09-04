@@ -696,611 +696,205 @@ const renderRecoveryPage = () => {
   // DASHBOARD
   // --------------------------------------------------
 
-  const renderDashboard = () => (
-    <>
-    
-      {/* KPI CARDS */}
+  const renderDashboard = () => {
+    const failedPayments = payments.filter(
+      (payment) => payment.status?.toUpperCase() === "FAILED"
+    );
 
-      <section className="stats-grid">
+    const recentPayments = [...payments]
+      .sort((a, b) => Number(b.id) - Number(a.id))
+      .slice(0, 6);
 
-        <StatCard
-          title="REVENUE AT RISK"
-          value={`₹${stats.revenueAtRisk.toLocaleString(
-            "en-IN"
-          )}`}
-          subtitle={`${stats.failedCount} failed payment${
-            stats.failedCount !== 1
-              ? "s"
-              : ""
-          }`}
-          icon="⚠"
-          type="warning"
-        />
+    const topRiskPayments = [...failedPayments]
+      .sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0))
+      .slice(0, 5);
 
-        <StatCard
-          title="RECOVERED REVENUE"
-          value={`₹${stats.recoveredRevenue.toLocaleString(
-            "en-IN"
-          )}`}
-          subtitle={`${stats.successCount} successful payment${
-            stats.successCount !== 1
-              ? "s"
-              : ""
-          }`}
-          icon="✓"
-          type="success"
-        />
+    const successRate = payments.length
+      ? Math.round((stats.successCount / payments.length) * 100)
+      : 0;
 
-        <StatCard
-          title="FAILED PAYMENTS"
-          value={stats.failedCount}
-          subtitle="Needs attention"
-          icon="!"
-          type="danger"
-        />
-
-        <StatCard
-          title="RECOVERY RATE"
-          value={`${stats.recoveryRate}%`}
-          subtitle="Payment success rate"
-          icon="↗"
-          type="info"
-        />
-
-      </section>
-
-      {/* CONTENT GRID */}
-
-      <section className="content-grid">
-
-        {/* PAYMENT QUEUE */}
-
-        <div className="panel payment-panel">
-
-          <div className="panel-header">
-
-            <div>
-              <h2>
-                ▣ &nbsp; Payment Recovery Queue
-              </h2>
-
-              <p>
-                Monitor and recover failed payments
-              </p>
+    return (
+      <div className="command-dashboard">
+        <section className="command-welcome">
+          <div>
+            <div className="command-eyebrow">
+              <span className="live-pulse" /> LIVE REVENUE MONITORING
+              <span className="test-mode-pill">RAZORPAY TEST MODE</span>
             </div>
+            <h1>Recover revenue before it is lost.</h1>
+            <p>
+              RecoverAI continuously diagnoses failed payments, prioritizes risk,
+              and recommends the next best recovery action.
+            </p>
+          </div>
+          <div className="command-date">
+            <span>OPERATIONS CENTER</span>
+            <strong>{new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</strong>
+          </div>
+        </section>
 
-            <button
-              className="refresh-button"
-              onClick={loadData}
-            >
-              ↻ Refresh
-            </button>
-
+        <section className="ai-command-hero">
+          <div className="hero-copy">
+            <span className="hero-kicker">AI REVENUE RECOVERY</span>
+            <h2>Turn payment failures into recoverable revenue.</h2>
+            <p>
+              One command center for payment intelligence, customer history and
+              automated recovery decisions.
+            </p>
+            <div className="hero-actions">
+              <button className="hero-primary" onClick={() => setActivePage("Recovery")}>
+                Open Recovery Center <span>→</span>
+              </button>
+              <button className="hero-secondary" onClick={() => setActivePage("Payments")}>
+                View payment activity
+              </button>
+            </div>
           </div>
 
-          <div className="filters">
-
-            <div className="filter active">
-              All&nbsp; {payments.length}
+          <div className="ai-orbit-stage" aria-hidden="true">
+            <div className="orbit orbit-one" />
+            <div className="orbit orbit-two" />
+            <div className="orbit orbit-three" />
+            <div className="ai-core">
+              <span>✦</span>
+              <small>AI</small>
             </div>
-
-            <div className="filter failed">
-              Failed&nbsp; {stats.failedCount}
+            <div className="floating-signal signal-risk">
+              <span>RISK</span><strong>{failedPayments.length}</strong>
             </div>
-
-            <div className="filter success">
-              Success&nbsp; {stats.successCount}
+            <div className="floating-signal signal-recovered">
+              <span>RECOVERED</span><strong>₹{stats.recoveredRevenue.toLocaleString("en-IN")}</strong>
             </div>
-
-            <input
-              className="search"
-              placeholder="Search payments..."
-            />
-
           </div>
+        </section>
 
-          <div className="table-wrapper">
-
-            <table>
-
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Failure Reason</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {loading ? (
-
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="empty"
-                    >
-                      Loading payments...
-                    </td>
-                  </tr>
-
-                ) : payments.length === 0 ? (
-
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="empty"
-                    >
-                      No payments available
-                    </td>
-                  </tr>
-
-                ) : (
-
-                  payments.map((payment) => {
-
-                    const customer =
-                      getCustomer(
-                        payment.customer_id
-                      );
-
-                    const isFailed =
-                      payment.status?.toUpperCase() ===
-                      "FAILED";
-
-                    return (
-
-                      <tr key={payment.id}>
-
-                        <td>
-
-                          <div className="customer">
-
-                            <div className="customer-avatar">
-
-                              {customer?.name
-                                ?.split(" ")
-                                .map(
-                                  (word) =>
-                                    word[0]
-                                )
-                                .join("")
-                                .slice(0, 2)
-                                .toUpperCase() ||
-                                "CU"}
-
-                            </div>
-
-                            <div>
-
-                              <strong>
-                                {customer?.name ||
-                                  "Unknown Customer"}
-                              </strong>
-
-                              <small>
-                                {customer?.email ||
-                                  "No email"}
-                              </small>
-
-                            </div>
-
-                          </div>
-
-                        </td>
-
-                        <td className="amount">
-                          ₹
-                          {Number(
-                            payment.amount
-                          ).toLocaleString(
-                            "en-IN"
-                          )}
-                        </td>
-
-                        <td>
-
-                          <span
-                            className={`status ${
-                              isFailed
-                                ? "status-failed"
-                                : "status-success"
-                            }`}
-                          >
-                            {isFailed
-                              ? "FAILED"
-                              : "SUCCESS"}
-                          </span>
-
-                        </td>
-
-                        <td className="failure">
-                          {payment.failure_reason ||
-                            "—"}
-                        </td>
-
-                        <td className="date">
-
-                          {new Date().toLocaleDateString(
-                            "en-IN"
-                          )}
-
-                          <small>
-                            Today
-                          </small>
-
-                        </td>
-
-                        <td>
-
-                          {isFailed ? (
-
-                            <button
-                              className="analyze-button"
-                              onClick={() =>
-                                analyzePayment(
-                                  payment
-                                )
-                              }
-                            >
-                              ✨ Analyze
-                            </button>
-
-                          ) : (
-
-                            <span className="success-check">
-                              ✓
-                            </span>
-
-                          )}
-
-                        </td>
-
-                      </tr>
-
-                    );
-                  })
-
-                )}
-
-              </tbody>
-
-            </table>
-
+        <section className="command-metrics">
+          <div className="command-metric metric-risk">
+            <div className="metric-label"><span>01</span> REVENUE AT RISK</div>
+            <strong>₹{stats.revenueAtRisk.toLocaleString("en-IN")}</strong>
+            <p>{stats.failedCount} failed payments need attention</p>
+            <div className="metric-bar"><i style={{ width: `${Math.min(100, stats.failedCount * 3)}%` }} /></div>
           </div>
-
-          <div className="table-footer">
-            Showing {payments.length} payment
-            {payments.length !== 1
-              ? "s"
-              : ""}
+          <div className="command-metric metric-recovered">
+            <div className="metric-label"><span>02</span> RECOVERED REVENUE</div>
+            <strong>₹{stats.recoveredRevenue.toLocaleString("en-IN")}</strong>
+            <p>{stats.recoveredCount} recovery decisions completed</p>
+            <div className="metric-bar"><i style={{ width: `${Math.min(100, stats.recoveryRate)}%` }} /></div>
           </div>
+          <div className="command-metric metric-volume">
+            <div className="metric-label"><span>03</span> PAYMENTS MONITORED</div>
+            <strong>{payments.length}</strong>
+            <p>{stats.successCount} successful · {stats.failedCount} failed</p>
+            <div className="metric-bar"><i style={{ width: `${Math.min(100, successRate)}%` }} /></div>
+          </div>
+          <div className="command-metric metric-rate">
+            <div className="metric-label"><span>04</span> RECOVERY RATE</div>
+            <strong>{stats.recoveryRate}%</strong>
+            <p>Recovered vs. failed payment queue</p>
+            <div className="metric-bar"><i style={{ width: `${Math.min(100, stats.recoveryRate)}%` }} /></div>
+          </div>
+        </section>
 
-        </div>
-
-        {/* AI INSIGHT */}
-
-        <div className="panel insight-panel">
-
-          <div className="panel-header">
-
-            <div>
-
-              <h2>
-                ✦ &nbsp; AI Recovery Insight
-              </h2>
-
-              <p>
-                Select a failed payment to get
-                AI recommendation
-              </p>
-
+        <section className="command-main-grid">
+          <div className="command-panel recovery-focus">
+            <div className="command-panel-head">
+              <div>
+                <span className="panel-kicker">PRIORITY QUEUE</span>
+                <h3>Payments that need a decision</h3>
+              </div>
+              <button className="text-action" onClick={() => setActivePage("Recovery")}>Open queue →</button>
             </div>
 
-            <span className="ai-badge">
-              AI ENGINE
-            </span>
-
-          </div>
-
-          {!selectedPayment ? (
-
-            <div className="insight-empty">
-
-              <div className="empty-icon">
-                ◎
-              </div>
-
-              <h3>
-                Select a payment
-              </h3>
-
-              <p>
-                Click "Analyze" on a failed
-                payment to see RecoverAI's
-                recommendation.
-              </p>
-
-            </div>
-
-          ) : analyzing ? (
-
-            <div className="insight-empty">
-
-              <div className="loader">
-                ✦
-              </div>
-
-              <h3>
-                AI is analyzing...
-              </h3>
-
-              <p>
-                Diagnosing payment failure and
-                selecting the best recovery strategy.
-              </p>
-
-            </div>
-
-          ) : analysis ? (
-
-            <div className="insight-content">
-
-              <div className="insight-customer">
-
-                <div className="large-avatar">
-
-                  {getCustomer(
-                    selectedPayment.customer_id
-                  )
-                    ?.name
-                    ?.split(" ")
-                    .map(
-                      (word) => word[0]
-                    )
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase() ||
-                    "CU"}
-
-                </div>
-
-                <div>
-
-                  <h3>
-                    {getCustomer(
-                      selectedPayment.customer_id
-                    )?.name ||
-                      "Customer"}
-                  </h3>
-
-                  <p>
-                    Payment #
-                    {selectedPayment.id}
-                  </p>
-
-                </div>
-
-                <strong className="insight-amount">
-
-                  ₹
-                  {Number(
-                    selectedPayment.amount
-                  ).toLocaleString(
-                    "en-IN"
-                  )}
-
-                </strong>
-
-              </div>
-
-              <div className="risk-box">
-
-                <div>
-
-                  <small>
-                    RISK LEVEL
-                  </small>
-
-                  <strong className="risk-high">
-                    {analysis.risk}
-                  </strong>
-
-                </div>
-
-                <div className="vertical-line"></div>
-
-                <div>
-
-                  <small>
-                    RECOMMENDED ACTION
-                  </small>
-
-                  <strong>
-                    {analysis.recommendation}
-                  </strong>
-
-                </div>
-
-              </div>
-
-              <div className="reason-section">
-
-                <small>
-                  FAILURE REASON
-                </small>
-
-                <strong>
-                  {analysis.failure_reason ||
-                    "Unknown"}
-                </strong>
-
-              </div>
-
-              <div className="ai-analysis">
-
-                <div className="ai-analysis-header">
-                  <div className="ai-analysis-title">
-                    ✦ AI Analysis
-                  </div>
-
-                  {analysis.ai_provider && (
-                    <span className="gemini-badge">
-                      {analysis.ai_provider}
-                    </span>
-                  )}
-                </div>
-
-                <p>
-                  {analysis.reason}
-                </p>
-
-                {(analysis.confidence !== undefined || analysis.ai_provider) && (
-                  <div className="ai-meta">
-                    {analysis.confidence !== undefined && (
-                      <div className="ai-confidence">
-                        <span>AI Confidence</span>
-                        <strong>
-                          {Math.round(Number(analysis.confidence) * 100)}%
-                        </strong>
+            <div className="priority-list">
+              {loading ? (
+                <div className="dashboard-empty">Loading payment intelligence…</div>
+              ) : topRiskPayments.length === 0 ? (
+                <div className="dashboard-empty"><strong>Queue is clear</strong><span>No failed payments currently require recovery.</span></div>
+              ) : (
+                topRiskPayments.map((payment) => {
+                  const customer = getCustomer(payment.customer_id);
+                  const reason = (payment.failure_reason || "").toLowerCase();
+                  const risk = reason.includes("declined") || reason.includes("insufficient") ? "HIGH" : reason.includes("expired") ? "MEDIUM" : "MEDIUM";
+                  const recommendation = reason.includes("declined") ? "SEND PAYMENT LINK" : reason.includes("expired") ? "NEW PAYMENT METHOD" : "RETRY PAYMENT";
+                  return (
+                    <div className="priority-row" key={payment.id}>
+                      <div className="priority-index">#{payment.id}</div>
+                      <div className="priority-customer">
+                        <div className="priority-avatar">{customer?.name?.split(" ").map((word) => word[0]).join("").slice(0, 2).toUpperCase() || "CU"}</div>
+                        <div><strong>{customer?.name || "Unknown Customer"}</strong><span>{payment.failure_reason || "Payment failed"}</span></div>
                       </div>
-                    )}
-
-                    {analysis.ai_provider && (
-                      <div className="ai-provider-text">
-                        Decision powered by <strong>{analysis.ai_provider}</strong>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-              </div>
-
-              {analysis.recovery_status && (
-
-                <div className="recovery-result">
-
-                  <div className="recovery-result-header">
-                    <strong>Recovery Result</strong>
-                    <span className={`recovery-status ${String(analysis.recovery_status).toLowerCase()}`}>
-                      {analysis.recovery_status}
-                    </span>
-                  </div>
-
-                  <div className="recovery-result-grid">
-
-                    {analysis.action && (
-                      <div>
-                        <span>Action Executed</span>
-                        <strong>{analysis.action}</strong>
-                      </div>
-                    )}
-
-                    {analysis.risk && (
-                      <div>
-                        <span>Risk</span>
-                        <strong>{analysis.risk}</strong>
-                      </div>
-                    )}
-
-                    {analysis.confidence !== undefined && (
-                      <div>
-                        <span>AI Confidence</span>
-                        <strong>
-                          {Math.round(Number(analysis.confidence) * 100)}%
-                        </strong>
-                      </div>
-                    )}
-
-                    {analysis.recovery_log_id && (
-                      <div>
-                        <span>Audit Log</span>
-                        <strong>#{analysis.recovery_log_id}</strong>
-                      </div>
-                    )}
-
-                  </div>
-
-                  {analysis.message && (
-                    <p>{analysis.message}</p>
-                  )}
-
-                  {analysis.payment_link && (
-                    <div className="razorpay-link-card">
-                      <div className="razorpay-link-icon">↗</div>
-                      <div className="razorpay-link-content">
-                        <strong>Razorpay Payment Link Created</strong>
-                        <span>Customer can complete the payment securely.</span>
-                        {analysis.razorpay_payment_link_id && (
-                          <small>Payment Link ID: {analysis.razorpay_payment_link_id}</small>
-                        )}
-                      </div>
-                      <a
-                        className="razorpay-link-button"
-                        href={analysis.payment_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open Payment Link ↗
-                      </a>
+                      <div className="priority-amount">₹{Number(payment.amount || 0).toLocaleString("en-IN")}</div>
+                      <span className={`risk-chip ${risk.toLowerCase()}`}>{risk}</span>
+                      <div className="priority-action"><span>{recommendation}</span><button onClick={() => analyzePayment(payment)}>Analyze →</button></div>
                     </div>
-                  )}
-
-                  {analysis.ai_provider && (
-                    <small>
-                      Recovery decision powered by <strong>{analysis.ai_provider}</strong>
-                    </small>
-                  )}
-
-                </div>
-
+                  );
+                })
               )}
-
-              <div className="insight-actions">
-
-                <button
-                  className="secondary-button"
-                  onClick={() =>
-                    analyzePayment(
-                      selectedPayment
-                    )
-                  }
-                  disabled={recovering}
-                >
-                  ↻ Analyze Again
-                </button>
-
-                {!["RECOVERED", "CUSTOMER_ACTION_REQUIRED", "NO_ACTION"].includes(
-                  analysis.recovery_status
-                ) && (
-
-                  <button
-                    className="recover-button"
-                    onClick={recoverPayment}
-                    disabled={recovering}
-                  >
-                    {recovering
-                      ? "Recovering..."
-                      : "ϟ Recover Payment"}
-                  </button>
-
-                )}
-
-              </div>
-
             </div>
+          </div>
 
-          ) : null}
+          <div className="command-panel health-panel">
+            <div className="command-panel-head">
+              <div><span className="panel-kicker">SYSTEM HEALTH</span><h3>Recovery performance</h3></div>
+              <span className="healthy-badge"><i /> Healthy</span>
+            </div>
+            <div className="health-visual">
+              <div className="health-ring" style={{ "--progress": `${Math.min(100, stats.recoveryRate)}%` }}>
+                <div><strong>{stats.recoveryRate}%</strong><span>recovery</span></div>
+              </div>
+              <div className="health-summary">
+                <div><span>Successful payments</span><strong>{stats.successCount}</strong></div>
+                <div><span>Failed payments</span><strong>{stats.failedCount}</strong></div>
+                <div><span>Recovered cases</span><strong>{stats.recoveredCount}</strong></div>
+              </div>
+            </div>
+            <div className="health-foot"><span>AI monitoring active</span><strong>●</strong></div>
+          </div>
+        </section>
 
-        </div>
+        <section className="command-panel activity-panel">
+          <div className="command-panel-head">
+            <div><span className="panel-kicker">LIVE ACTIVITY</span><h3>Recent payment movement</h3></div>
+            <button className="text-action" onClick={() => setActivePage("Payments")}>View all →</button>
+          </div>
+          <div className="activity-grid-new">
+            {recentPayments.map((payment) => {
+              const customer = getCustomer(payment.customer_id);
+              const successful = payment.status?.toUpperCase() === "SUCCESS";
+              return (
+                <div className="activity-card-new" key={payment.id}>
+                  <div className={`activity-status-dot ${successful ? "success" : "failed"}`} />
+                  <div className="activity-card-main">
+                    <strong>{customer?.name || `Customer #${payment.customer_id}`}</strong>
+                    <span>Payment #{payment.id} · {successful ? "Payment completed" : payment.failure_reason || "Payment failed"}</span>
+                  </div>
+                  <div className="activity-card-amount">₹{Number(payment.amount || 0).toLocaleString("en-IN")}</div>
+                  <span className={`activity-state ${successful ? "success" : "failed"}`}>{successful ? "SUCCESS" : "FAILED"}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-      </section>
-
-    </>
-  );
+        {selectedPayment && analysis && (
+          <section className="command-panel decision-panel-new">
+            <div className="decision-glow" />
+            <div className="decision-copy">
+              <span className="panel-kicker">SELECTED AI DECISION</span>
+              <h3>Payment #{selectedPayment.id} · {getCustomer(selectedPayment.customer_id)?.name || "Customer"}</h3>
+              <p>{analysis.reason || "RecoverAI has analyzed this payment and selected the best recovery strategy."}</p>
+            </div>
+            <div className="decision-facts">
+              <div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div>
+              <div><span>RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div>
+              <div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div>
+            </div>
+            <button className="decision-button" onClick={() => setActivePage("Recovery")}>Open decision →</button>
+          </section>
+        )}
+      </div>
+    );
+  };
 
   // --------------------------------------------------
   // PAYMENTS PAGE
