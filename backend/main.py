@@ -201,8 +201,16 @@ Return your analysis using the required JSON structure.
         except Exception as e:
             print(f"Gemini analysis failed (attempt {attempt + 1}/3):", e)
 
+            error_text = str(e)
+
+            # Quota/rate-limit errors should immediately use the
+            # deterministic fallback engine instead of wasting retries.
+            if "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
+                print("Gemini quota/rate limit reached. Using RecoverAI fallback engine.")
+                return None
+
             # Retry temporary Gemini service/capacity errors.
-            if "503" in str(e) or "UNAVAILABLE" in str(e):
+            if "503" in error_text or "UNAVAILABLE" in error_text:
                 if attempt < 2:
                     import time
                     time.sleep(2)
@@ -874,6 +882,8 @@ def recover_payment(
             "amount": payment.amount,
             "action": "NO ACTION",
             "recovery_status": "NOT_REQUIRED",
+            "confidence": 1.0,
+            "ai_provider": "System",
             "message": "Payment is already successful"
         }
 

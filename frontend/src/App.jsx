@@ -20,6 +20,8 @@ function App() {
   // Payments page controls
   const [paymentSearch, setPaymentSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("ALL");
+  const [paymentPage, setPaymentPage] = useState(1);
+  const paymentsPerPage = 10;
 
   // --------------------------------------------------
   // LOAD DATA
@@ -100,6 +102,7 @@ function App() {
       }
 
       setAnalysis(data);
+      setShowDecision(true);
     } catch (err) {
       console.error(err);
       setError("Unable to analyze payment.");
@@ -694,6 +697,26 @@ const renderRecoveryPage = () => {
     paymentFilter,
   ]);
 
+  const totalPaymentPages = Math.max(
+    1,
+    Math.ceil(filteredPayments.length / paymentsPerPage)
+  );
+
+  const paginatedPayments = filteredPayments.slice(
+    (paymentPage - 1) * paymentsPerPage,
+    paymentPage * paymentsPerPage
+  );
+
+  useEffect(() => {
+    setPaymentPage(1);
+  }, [paymentSearch, paymentFilter]);
+
+  useEffect(() => {
+    if (paymentPage > totalPaymentPages) {
+      setPaymentPage(totalPaymentPages);
+    }
+  }, [paymentPage, totalPaymentPages]);
+
   // --------------------------------------------------
   // DASHBOARD
   // --------------------------------------------------
@@ -878,22 +901,7 @@ const renderRecoveryPage = () => {
           </div>
         </section>
 
-        {selectedPayment && analysis && (
-          <section className="command-panel decision-panel-new">
-            <div className="decision-glow" />
-            <div className="decision-copy">
-              <span className="panel-kicker">SELECTED AI DECISION</span>
-              <h3>Payment #{selectedPayment.id} · {getCustomer(selectedPayment.customer_id)?.name || "Customer"}</h3>
-              <p>{analysis.reason || "RecoverAI has analyzed this payment and selected the best recovery strategy."}</p>
-            </div>
-            <div className="decision-facts">
-              <div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div>
-              <div><span>RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div>
-              <div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div>
-            </div>
-            <button className="decision-button" onClick={() => setShowDecision(true)}>Open decision →</button>
-          </section>
-        )}
+
       </div>
     );
   };
@@ -1081,7 +1089,7 @@ const renderRecoveryPage = () => {
 
               ) : (
 
-                filteredPayments.map(
+                paginatedPayments.map(
                   (payment) => {
 
                     const customer =
@@ -1219,9 +1227,56 @@ const renderRecoveryPage = () => {
 
         </div>
 
-        <div className="table-footer">
-          Showing {filteredPayments.length} of{" "}
-          {payments.length} payments
+        <div className="table-footer payment-pagination-footer">
+          <span>
+            Showing{" "}
+            {filteredPayments.length === 0
+              ? 0
+              : (paymentPage - 1) * paymentsPerPage + 1}
+            –
+            {Math.min(
+              paymentPage * paymentsPerPage,
+              filteredPayments.length
+            )}{" "}
+            of {filteredPayments.length} payments
+          </span>
+
+          {totalPaymentPages > 1 && (
+            <div className="pagination">
+              <button
+                disabled={paymentPage === 1}
+                onClick={() =>
+                  setPaymentPage((page) => Math.max(1, page - 1))
+                }
+              >
+                ← Previous
+              </button>
+
+              {Array.from(
+                { length: totalPaymentPages },
+                (_, index) => index + 1
+              ).map((page) => (
+                <button
+                  key={page}
+                  className={paymentPage === page ? "active" : ""}
+                  onClick={() => setPaymentPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                disabled={paymentPage === totalPaymentPages}
+                onClick={() =>
+                  setPaymentPage((page) =>
+                    Math.min(totalPaymentPages, page + 1)
+                  )
+                }
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
@@ -1967,7 +2022,7 @@ const renderRecoveryPage = () => {
           <div className="decision-modal-backdrop" onClick={() => setShowDecision(false)}>
             <div className="decision-modal" onClick={(event) => event.stopPropagation()}>
               <div className="decision-modal-header"><div><span className="panel-kicker">RECOVERAI DECISION CENTER</span><h2>Payment #{selectedPayment.id} decision</h2><p>{getCustomer(selectedPayment.customer_id)?.name || "Customer"} · ₹{Number(selectedPayment.amount || 0).toLocaleString("en-IN")}</p></div><button className="decision-close" onClick={() => setShowDecision(false)}>×</button></div>
-              <div className="decision-modal-grid"><div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div><div><span>AI RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div><div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div><div><span>AI PROVIDER</span><strong>{analysis.ai_provider || "Gemini"}</strong></div></div>
+              <div className="decision-modal-grid"><div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div><div><span>AI RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div><div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div><div><span>AI PROVIDER</span><strong>{analysis.ai_provider || "—"}</strong></div></div>
               <div className="decision-modal-reason"><span>WHY THIS DECISION?</span><p>{analysis.reason || "RecoverAI analyzed this payment and selected the recommended recovery strategy."}</p></div>
               {analysis.recovery_status && <div className="decision-modal-recovery"><div><span>RECOVERY STATUS</span><strong>{String(analysis.recovery_status).replaceAll("_", " ")}</strong></div>{analysis.action && <div><span>ACTION EXECUTED</span><strong>{analysis.action}</strong></div>}{analysis.recovery_log_id && <div><span>AUDIT LOG</span><strong>#{analysis.recovery_log_id}</strong></div>}</div>}
               {analysis.message && <div className="decision-modal-message">{analysis.message}</div>}

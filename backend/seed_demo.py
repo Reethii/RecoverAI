@@ -2,7 +2,24 @@ from database import SessionLocal
 import models
 
 # ============================================================
-# RECOVERAI - FRESH 35 CUSTOMER DEMO DATA
+# RECOVERAI - CLEAN 10 CUSTOMER DEMO DATA
+# ============================================================
+# Demo distribution:
+#   2  -> RETRY PAYMENT
+#   3  -> SEND PAYMENT LINK
+#   3  -> REQUEST NEW PAYMENT METHOD
+#   2  -> NO ACTION
+#
+# Total:
+#   10 customers
+#   20 payments
+#   8 failed current payments
+#   12 successful payments
+#
+# The first 10 inserted payments are the current/demo payments,
+# so the Payments page shows a clean first page of all scenarios.
+# The next 10 are previous successful payments used as customer
+# payment history for AI analysis.
 # ============================================================
 
 db = SessionLocal()
@@ -14,56 +31,33 @@ try:
     existing_customers = db.query(models.Customer).count()
 
     if existing_customers != 0:
-        print(f"ERROR: Database already contains {existing_customers} customers.")
-        print("Please make sure recoverai.db was deleted before running this script.")
-        raise SystemExit(1)
+	print(f"Clearing existing demo data ({existing_customers} customers)...")
+    	db.query(models.RecoveryLog).delete()
+    	db.query(models.Payment).delete()
+    	db.query(models.Customer).delete()
+    	db.commit()
 
     # --------------------------------------------------------
-    # 35 CUSTOMERS
+    # 10 CUSTOMERS
     # --------------------------------------------------------
     customers = [
-        # RETRY PAYMENT - 9
+        # RETRY PAYMENT - 2
         ("Aarav Sharma", "aarav.sharma@example.com", "+91 9000000001"),
         ("Ananya Rao", "ananya.rao@example.com", "+91 9000000002"),
+
+        # SEND PAYMENT LINK - 3
         ("Rohan Mehta", "rohan.mehta@example.com", "+91 9000000003"),
         ("Ishita Nair", "ishita.nair@example.com", "+91 9000000004"),
         ("Arjun Kapoor", "arjun.kapoor@example.com", "+91 9000000005"),
+
+        # REQUEST NEW PAYMENT METHOD - 3
         ("Meera Iyer", "meera.iyer@example.com", "+91 9000000006"),
         ("Karan Malhotra", "karan.malhotra@example.com", "+91 9000000007"),
         ("Sneha Joshi", "sneha.joshi@example.com", "+91 9000000008"),
+
+        # NO ACTION - 2
         ("Vikram Desai", "vikram.desai@example.com", "+91 9000000009"),
-
-        # PAYMENT LINK - 9
         ("Priya Menon", "priya.menon@example.com", "+91 9000000010"),
-        ("Aditya Verma", "aditya.verma@example.com", "+91 9000000011"),
-        ("Neha Kulkarni", "neha.kulkarni@example.com", "+91 9000000012"),
-        ("Rahul Bhat", "rahul.bhat@example.com", "+91 9000000013"),
-        ("Kavya Reddy", "kavya.reddy@example.com", "+91 9000000014"),
-        ("Siddharth Jain", "siddharth.jain@example.com", "+91 9000000015"),
-        ("Pooja Shah", "pooja.shah@example.com", "+91 9000000016"),
-        ("Nikhil Shetty", "nikhil.shetty@example.com", "+91 9000000017"),
-        ("Divya Krishnan", "divya.krishnan@example.com", "+91 9000000018"),
-
-        # NEW PAYMENT METHOD - 8
-        ("Manish Agarwal", "manish.agarwal@example.com", "+91 9000000019"),
-        ("Tanvi Sinha", "tanvi.sinha@example.com", "+91 9000000020"),
-        ("Harsh Vardhan", "harsh.vardhan@example.com", "+91 9000000021"),
-        ("Riya Patel", "riya.patel@example.com", "+91 9000000022"),
-        ("Akash Gupta", "akash.gupta@example.com", "+91 9000000023"),
-        ("Nandini Rao", "nandini.rao@example.com", "+91 9000000024"),
-        ("Yash Raj", "yash.raj@example.com", "+91 9000000025"),
-        ("Simran Kaur", "simran.kaur@example.com", "+91 9000000026"),
-
-        # NO ACTION - 9
-        ("Aniket Roy", "aniket.roy@example.com", "+91 9000000027"),
-        ("Shreya Das", "shreya.das@example.com", "+91 9000000028"),
-        ("Mohit Arora", "mohit.arora@example.com", "+91 9000000029"),
-        ("Aditi Singh", "aditi.singh@example.com", "+91 9000000030"),
-        ("Varun Kumar", "varun.kumar@example.com", "+91 9000000031"),
-        ("Lakshmi Narayan", "lakshmi.narayan@example.com", "+91 9000000032"),
-        ("Dev Patel", "dev.patel@example.com", "+91 9000000033"),
-        ("Sanya Kapoor", "sanya.kapoor@example.com", "+91 9000000034"),
-        ("Ritesh Gowda", "ritesh.gowda@example.com", "+91 9000000035"),
     ]
 
     customer_objects = []
@@ -86,32 +80,24 @@ try:
     # --------------------------------------------------------
     # PAYMENT DATA
     # --------------------------------------------------------
-
     payments = []
 
     # ========================================================
-    # 1-9 : RETRY PAYMENT
+    # CURRENT / DEMO PAYMENTS
+    # These are inserted first so the first Payments page
+    # contains the 10 clean demo scenarios.
     # ========================================================
 
-    retry_amounts = [
-        2400, 3200, 1800, 4500, 2750,
-        3900, 2100, 5200, 3500
-    ]
+    # --------------------------------------------------------
+    # 1-2 : RETRY PAYMENT
+    # Failure: temporary timeout
+    # AI decision: RETRY PAYMENT
+    # --------------------------------------------------------
+    retry_amounts = [2400, 3200]
 
-    for i in range(9):
+    for i in range(2):
         customer = customer_objects[i]
 
-        # Previous successful payment gives Gemini context
-        payments.append(
-            models.Payment(
-                customer_id=customer.id,
-                amount=1800 + (i * 150),
-                status="SUCCESS",
-                failure_reason=None
-            )
-        )
-
-        # Current failed payment
         payments.append(
             models.Payment(
                 customer_id=customer.id,
@@ -121,26 +107,15 @@ try:
             )
         )
 
-    # ========================================================
-    # 10-18 : SEND PAYMENT LINK
-    # ========================================================
+    # --------------------------------------------------------
+    # 3-5 : SEND PAYMENT LINK
+    # Failure: payment method declined
+    # AI decision: SEND PAYMENT LINK
+    # --------------------------------------------------------
+    link_amounts = [6800, 4500, 7200]
 
-    link_amounts = [
-        6800, 4500, 7200, 5600, 8400,
-        6300, 9100, 4800, 7600
-    ]
-
-    for i in range(9):
-        customer = customer_objects[9 + i]
-
-        payments.append(
-            models.Payment(
-                customer_id=customer.id,
-                amount=2500 + (i * 200),
-                status="SUCCESS",
-                failure_reason=None
-            )
-        )
+    for i in range(3):
+        customer = customer_objects[2 + i]
 
         payments.append(
             models.Payment(
@@ -151,26 +126,15 @@ try:
             )
         )
 
-    # ========================================================
-    # 19-26 : REQUEST NEW PAYMENT METHOD
-    # ========================================================
+    # --------------------------------------------------------
+    # 6-8 : REQUEST NEW PAYMENT METHOD
+    # Failure: payment method expired
+    # AI decision: REQUEST NEW PAYMENT METHOD
+    # --------------------------------------------------------
+    method_amounts = [12500, 9800, 7600]
 
-    method_amounts = [
-        12500, 9800, 7600, 11400,
-        8900, 13200, 6700, 10500
-    ]
-
-    for i in range(8):
-        customer = customer_objects[18 + i]
-
-        payments.append(
-            models.Payment(
-                customer_id=customer.id,
-                amount=3000 + (i * 250),
-                status="SUCCESS",
-                failure_reason=None
-            )
-        )
+    for i in range(3):
+        customer = customer_objects[5 + i]
 
         payments.append(
             models.Payment(
@@ -181,17 +145,15 @@ try:
             )
         )
 
-    # ========================================================
-    # 27-35 : NO ACTION
-    # ========================================================
+    # --------------------------------------------------------
+    # 9-10 : NO ACTION
+    # Payment already successful
+    # AI decision: NO ACTION
+    # --------------------------------------------------------
+    no_action_amounts = [2200, 3400]
 
-    no_action_amounts = [
-        2200, 3400, 1800, 4200, 2900,
-        5100, 3600, 2750, 4600
-    ]
-
-    for i in range(9):
-        customer = customer_objects[26 + i]
+    for i in range(2):
+        customer = customer_objects[8 + i]
 
         payments.append(
             models.Payment(
@@ -202,17 +164,37 @@ try:
             )
         )
 
+    # ========================================================
+    # PREVIOUS SUCCESSFUL PAYMENTS
+    # These provide payment history/context for the 8 customers
+    # whose current payment has failed.
+    # ========================================================
+    previous_success_amounts = [
+        1800, 2100, 2500, 2800, 3000,
+        3200, 3500, 3800, 1900, 2300
+    ]
+
+    for i in range(10):
+        customer = customer_objects[i]
+
+        payments.append(
+            models.Payment(
+                customer_id=customer.id,
+                amount=previous_success_amounts[i],
+                status="SUCCESS",
+                failure_reason=None
+            )
+        )
+
     # --------------------------------------------------------
     # INSERT PAYMENTS
     # --------------------------------------------------------
-
     db.add_all(payments)
     db.commit()
 
     # --------------------------------------------------------
     # SUMMARY
     # --------------------------------------------------------
-
     total_customers = db.query(models.Customer).count()
     total_payments = db.query(models.Payment).count()
 
@@ -235,12 +217,13 @@ try:
     print()
     print("Recovery Scenarios")
     print("----------------------------")
-    print("Retry Payment       : 9")
-    print("Send Payment Link   : 9")
-    print("New Payment Method  : 8")
-    print("No Action           : 9")
+    print("Retry Payment       : 2")
+    print("Send Payment Link   : 3")
+    print("New Payment Method  : 3")
+    print("No Action           : 2")
     print("----------------------------")
-    print("TOTAL CUSTOMERS     : 35")
+    print("TOTAL CUSTOMERS     : 10")
+    print("TOTAL PAYMENTS      : 20")
     print("=" * 60)
     print()
 
