@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import "./App.css";
 
 const API = "https://recoverai-idw1.onrender.com";
@@ -66,6 +67,18 @@ function App() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Keep the page behind the decision center from scrolling.
+  useEffect(() => {
+    if (!showDecision) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showDecision]);
 
   // --------------------------------------------------
   // CUSTOMER NAME
@@ -745,9 +758,26 @@ const renderRecoveryPage = () => {
       (payment) => payment.status?.toUpperCase() === "FAILED"
     );
 
-    const recentPayments = [...payments]
-      .sort((a, b) => Number(b.id) - Number(a.id))
-      .slice(0, 6);
+    // Put newly recovered payments first in LIVE ACTIVITY.
+    // The recovery log is the event stream, so a recovered payment
+    // remains visible even when its payment id is older than the
+    // seeded successful payments.
+    const recoveredIds = [];
+    for (const log of recoveryLogs) {
+      if (log.result?.toUpperCase() !== "RECOVERED") continue;
+      const id = Number(log.payment_id);
+      if (!recoveredIds.includes(id)) recoveredIds.push(id);
+    }
+
+    const recoveredPayments = recoveredIds
+      .map((id) => payments.find((payment) => Number(payment.id) === id))
+      .filter(Boolean);
+
+    const otherPayments = [...payments]
+      .filter((payment) => !recoveredIds.includes(Number(payment.id)))
+      .sort((a, b) => Number(b.id) - Number(a.id));
+
+    const recentPayments = [...recoveredPayments, ...otherPayments].slice(0, 6);
 
     const topRiskPayments = [...failedPayments]
       .sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0))
@@ -910,7 +940,17 @@ const renderRecoveryPage = () => {
                   <div className={`activity-status-dot ${successful ? "success" : "failed"}`} />
                   <div className="activity-card-main">
                     <strong>{customer?.name || `Customer #${payment.customer_id}`}</strong>
-                    <span>Payment #{payment.id} · {successful ? "Payment completed" : payment.failure_reason || "Payment failed"}</span>
+                    <span>
+                    Payment #{payment.id} · {successful
+                      ? (recoveryLogs.some(
+                          (log) =>
+                            Number(log.payment_id) === Number(payment.id) &&
+                            log.result?.toUpperCase() === "RECOVERED"
+                        )
+                          ? "Payment recovered by RecoverAI"
+                          : "Payment completed")
+                      : payment.failure_reason || "Payment failed"}
+                  </span>
                   </div>
                   <div className="activity-card-amount">₹{Number(payment.amount || 0).toLocaleString("en-IN")}</div>
                   <span className={`activity-state ${successful ? "success" : "failed"}`}>{successful ? "SUCCESS" : "FAILED"}</span>
@@ -2040,18 +2080,60 @@ const renderRecoveryPage = () => {
       </main>
 
       {/* DECISION MODAL - outside the scrolling main container */}
-        {showDecision && selectedPayment && analysis && (
+        {showDecision && selectedPayment && analysis && createPortal(
           <div className="decision-modal-backdrop" onClick={() => setShowDecision(false)}>
-            <div className="decision-modal" onClick={(event) => event.stopPropagation()}>
-              <div className="decision-modal-header"><div><span className="panel-kicker">RECOVERAI DECISION CENTER</span><h2>Payment #{selectedPayment.id} decision</h2><p>{getCustomer(selectedPayment.customer_id)?.name || "Customer"} · ₹{Number(selectedPayment.amount || 0).toLocaleString("en-IN")}</p></div><button className="decision-close" onClick={() => setShowDecision(false)}>×</button></div>
-              <div className="decision-modal-grid"><div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div><div><span>AI RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div><div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div><div><span>AI PROVIDER</span><strong>{analysis.ai_provider || "—"}</strong></div></div>
-              <div className="decision-modal-reason"><span>WHY THIS DECISION?</span><p>{analysis.reason || "RecoverAI analyzed this payment and selected the recommended recovery strategy."}</p></div>
-              {analysis.recovery_status && <div className="decision-modal-recovery"><div><span>RECOVERY STATUS</span><strong>{String(analysis.recovery_status).replaceAll("_", " ")}</strong></div>{analysis.action && <div><span>ACTION EXECUTED</span><strong>{analysis.action}</strong></div>}{analysis.recovery_log_id && <div><span>AUDIT LOG</span><strong>#{analysis.recovery_log_id}</strong></div>}</div>}
+            <div className="decision-modal" role="dialog" aria-modal="true" aria-labelledby="decision-title" onClick={(event) => event.stopPropagation()}>
+              <div className="decision-modal-header">
+                <div>
+                  <span className="panel-kicker">RECOVERAI DECISION CENTER</span>
+                  <h2 id="decision-title">Payment #{selectedPayment.id} decision</h2>
+                  <p>{getCustomer(selectedPayment.customer_id)?.name || "Customer"} · ₹{Number(selectedPayment.amount || 0).toLocaleString("en-IN")}</p>
+                </div>
+                <button className="decision-close" aria-label="Close decision center" onClick={() => setShowDecision(false)}>×</button>
+              </div>
+
+              <div className="decision-modal-grid">
+                <div><span>RISK</span><strong>{analysis.risk || "—"}</strong></div>
+                <div><span>AI RECOMMENDATION</span><strong>{analysis.recommendation || "—"}</strong></div>
+                <div><span>CONFIDENCE</span><strong>{analysis.confidence !== undefined ? `${Math.round(Number(analysis.confidence) * 100)}%` : "—"}</strong></div>
+                <div><span>AI PROVIDER</span><strong>{analysis.ai_provider || "—"}</strong></div>
+              </div>
+
+              <div className="decision-modal-reason">
+                <span>WHY THIS DECISION?</span>
+                <p>{analysis.reason || "RecoverAI analyzed this payment and selected the recommended recovery strategy."}</p>
+              </div>
+
+              {analysis.recovery_status && (
+                <div className="decision-modal-recovery">
+                  <div><span>RECOVERY STATUS</span><strong>{String(analysis.recovery_status).replaceAll("_", " ")}</strong></div>
+                  {analysis.action && <div><span>ACTION EXECUTED</span><strong>{analysis.action}</strong></div>}
+                  {analysis.recovery_log_id && <div><span>AUDIT LOG</span><strong>#{analysis.recovery_log_id}</strong></div>}
+                </div>
+              )}
+
               {analysis.message && <div className="decision-modal-message">{analysis.message}</div>}
-              {analysis.payment_link && <div className="decision-modal-payment-link"><div><span>RAZORPAY PAYMENT LINK</span><strong>Customer action required</strong>{analysis.razorpay_payment_link_id && <small>Link ID: {analysis.razorpay_payment_link_id}</small>}</div><a href={analysis.payment_link} target="_blank" rel="noopener noreferrer">Open Payment Link ↗</a></div>}
-              <div className="decision-modal-actions"><button className="secondary-button" onClick={() => setShowDecision(false)}>Close</button>{!analysis.recovery_status || !["RECOVERED","CUSTOMER_ACTION_REQUIRED","NO_ACTION"].includes(analysis.recovery_status) ? <button className="recover-button" onClick={recoverPayment} disabled={recovering}>{recovering ? "Executing..." : "ϟ Recover Payment"}</button> : <button className="recover-button" onClick={() => setShowDecision(false)}>Decision completed</button>}</div>
+
+              {analysis.payment_link && (
+                <div className="decision-modal-payment-link">
+                  <div><span>RAZORPAY PAYMENT LINK</span><strong>Customer action required</strong>{analysis.razorpay_payment_link_id && <small>Link ID: {analysis.razorpay_payment_link_id}</small>}</div>
+                  <a href={analysis.payment_link} target="_blank" rel="noopener noreferrer">Open Payment Link ↗</a>
+                </div>
+              )}
+
+              <div className="decision-modal-actions">
+                <button className="secondary-button" onClick={() => setShowDecision(false)}>Close</button>
+                {!analysis.recovery_status || !["RECOVERED", "CUSTOMER_ACTION_REQUIRED", "NO_ACTION"].includes(analysis.recovery_status) ? (
+                  <button className="recover-button" onClick={recoverPayment} disabled={recovering}>
+                    {recovering ? "Executing..." : "ϟ Recover Payment"}
+                  </button>
+                ) : (
+                  <button className="recover-button" onClick={() => setShowDecision(false)}>Decision completed</button>
+                )}
+              </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
     </div>

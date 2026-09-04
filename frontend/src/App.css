@@ -2814,3 +2814,319 @@ main {
     padding: 20px;
   }
 }
+
+/* =========================================================
+   RECOVERAI FINAL RESPONSIVE LAYOUT
+   ========================================================= */
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app {
+  width: 100%;
+  min-width: 0;
+}
+
+.main {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+  margin-left: 250px;
+  padding: 30px clamp(20px, 3vw, 42px);
+  overflow-x: hidden;
+}
+
+.command-dashboard,
+.command-welcome,
+.command-main-grid,
+.command-panel,
+.priority-list,
+.activity-panel {
+  min-width: 0;
+  width: 100%;
+}
+
+.command-main-grid {
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, .8fr);
+}
+
+.priority-row {
+  grid-template-columns: 34px minmax(0, 1.35fr) 88px 56px minmax(128px, .95fr);
+  gap: 9px;
+  min-width: 0;
+}
+
+.priority-customer,
+.priority-customer > div:last-child,
+.priority-action {
+  min-width: 0;
+}
+
+.priority-action {
+  gap: 7px;
+}
+
+.priority-action span {
+  min-width: 0;
+  max-width: 82px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priority-action button {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.activity-card-new {
+  min-width: 0;
+}
+
+.activity-card-main {
+  min-width: 0;
+}
+
+.payments-search {
+  max-width: 100%;
+}
+
+.full-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.payments-table {
+  min-width: 900px;
+}
+
+.payments-table td:last-child,
+.payments-table th:last-child {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.analyze-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  white-space: nowrap;
+}
+
+/* The decision center is portaled to document.body, so it always
+   sits above the application and never follows page scroll position. */
+.decision-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  background: rgba(13, 16, 32, .68) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.decision-modal {
+  position: relative;
+  z-index: 2147483647;
+  width: min(720px, calc(100vw - 40px));
+  max-width: 720px;
+  max-height: calc(100vh - 40px);
+  margin: 0 !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border: 1px solid #e5e7ef;
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 28px 90px rgba(10, 12, 28, .35);
+}
+
+.decision-modal-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.decision-modal-grid > div,
+.decision-modal-recovery > div {
+  min-width: 0;
+}
+
+.decision-modal-grid strong,
+.decision-modal-recovery strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1150px) {
+  .command-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-panel {
+    min-height: auto;
+  }
+
+  .priority-row {
+    grid-template-columns: 34px minmax(0, 1.5fr) 90px 60px;
+  }
+
+  .priority-action {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+    padding-top: 3px;
+  }
+
+  .priority-action span {
+    max-width: 180px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 210px;
+  }
+
+  .main {
+    margin-left: 210px;
+    padding: 24px 18px;
+  }
+
+  .command-metrics,
+  .metric-grid-large,
+  .payment-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .command-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .command-date {
+    display: none;
+  }
+
+  .payment-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .payments-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 650px) {
+  .sidebar {
+    width: 72px;
+    padding: 18px 10px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0 0 24px;
+  }
+
+  .brand > div:last-child,
+  .nav-item > span:last-child,
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+
+  .nav-icon {
+    width: auto;
+  }
+
+  .main {
+    margin-left: 72px;
+    padding: 20px 12px;
+  }
+
+  .command-metrics,
+  .metric-grid-large,
+  .payment-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .priority-row {
+    grid-template-columns: 32px minmax(0, 1fr) 64px;
+    gap: 8px;
+  }
+
+  .priority-amount {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .risk-chip {
+    grid-column: 2 / 3;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .priority-action {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    padding-top: 4px;
+  }
+
+  .priority-action button {
+    margin-left: auto;
+  }
+
+  .activity-grid-new {
+    grid-template-columns: 1fr;
+  }
+
+  .decision-modal-backdrop {
+    padding: 12px !important;
+  }
+
+  .decision-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .decision-modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .decision-modal-recovery {
+    grid-template-columns: 1fr;
+  }
+
+  .decision-modal-payment-link {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .decision-modal-actions {
+    flex-direction: column;
+  }
+}
